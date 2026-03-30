@@ -422,6 +422,30 @@
     color: var(--text-light);
     border: 1.5px solid var(--border);
   }
+  .w-confirm-bar {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .w-confirm-bar.visible { display: flex; }
+  .w-confirm-bar span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    white-space: nowrap;
+  }
+  .w-confirm-bar button {
+    width: 28px; height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .w-confirm-yes { background: var(--green); color: white; }
+  .w-confirm-no { background: var(--border); color: var(--text-mid); }
   .issue-note-wrap {
     margin-top: 6px;
   }
@@ -1158,9 +1182,9 @@ function buildCard(siteIdx) {
                 id="note-input-${siteIdx}-${wf.field}">${noteVal}</textarea>
             </div>
           </div>
-          <div class="warning-row-actions">
+          <div class="warning-row-actions" id="wra-${siteIdx}-${wf.field}">
             <button class="w-btn w-btn-resolve ${resolveActive}" title="Mark Resolved"
-              onclick="resolveWarning(${siteIdx},'${wf.field}')" aria-label="Mark ${esc(wf.label)} as resolved">
+              onclick="askConfirm(${siteIdx},'${wf.field}','resolve')" aria-label="Mark ${esc(wf.label)} as resolved">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
             <button class="w-btn w-btn-issue ${issueActive}" title="Log Issue"
@@ -1168,9 +1192,14 @@ function buildCard(siteIdx) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             <button class="w-btn w-btn-reset" title="Reset"
-              onclick="resetWarning(${siteIdx},'${wf.field}')" aria-label="Reset ${esc(wf.label)}">
+              onclick="askConfirm(${siteIdx},'${wf.field}','reset')" aria-label="Reset ${esc(wf.label)}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
             </button>
+          </div>
+          <div class="w-confirm-bar" id="wcb-${siteIdx}-${wf.field}">
+            <span>Sure?</span>
+            <button class="w-confirm-yes" onclick="doConfirm(${siteIdx},'${wf.field}')" title="Confirm">&#10003;</button>
+            <button class="w-confirm-no" onclick="cancelWarnConfirm(${siteIdx},'${wf.field}')" title="Cancel">&#10007;</button>
           </div>
         </div>`;
     });
@@ -1269,6 +1298,38 @@ function toggleCard(siteIdx) {
 }
 
 // ── WARNING ACTIONS ──
+let pendingConfirm = {};
+
+function askConfirm(siteIdx, field, action) {
+  // Store pending action
+  pendingConfirm = { siteIdx, field, action };
+  // Hide buttons, show confirm bar
+  const actions = document.getElementById('wra-' + siteIdx + '-' + field);
+  const confirm = document.getElementById('wcb-' + siteIdx + '-' + field);
+  if (actions) actions.style.display = 'none';
+  if (confirm) confirm.classList.add('visible');
+}
+
+function doConfirm(siteIdx, field) {
+  const p = pendingConfirm;
+  if (p.siteIdx === siteIdx && p.field === field) {
+    if (p.action === 'resolve') {
+      resolveWarning(siteIdx, field);
+    } else if (p.action === 'reset') {
+      resetWarning(siteIdx, field);
+    }
+  }
+  pendingConfirm = {};
+}
+
+function cancelWarnConfirm(siteIdx, field) {
+  pendingConfirm = {};
+  const actions = document.getElementById('wra-' + siteIdx + '-' + field);
+  const confirm = document.getElementById('wcb-' + siteIdx + '-' + field);
+  if (actions) actions.style.display = '';
+  if (confirm) confirm.classList.remove('visible');
+}
+
 function resolveWarning(siteIdx, field) {
   const ws = state.warnings[siteIdx] && state.warnings[siteIdx][field];
   if (ws && ws.status === 'resolved') {

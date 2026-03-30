@@ -626,6 +626,42 @@
     box-shadow: 0 4px 12px rgba(185,28,28,0.25);
   }
 
+  .confirm-bar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-border);
+    animation: slideDown 0.2s ease;
+  }
+  .confirm-bar.visible { display: flex; }
+  .confirm-bar .confirm-msg {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+  .confirm-bar button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 36px;
+  }
+  .confirm-yes {
+    background: var(--green);
+    color: white;
+  }
+  .confirm-no {
+    background: var(--border);
+    color: var(--text-mid);
+  }
+
   .issue-note-wrap {
     display: none;
     flex-direction: column;
@@ -1319,6 +1355,11 @@ function renderSiteCard(s) {
           &#9888; Issue
         </button>
       </div>
+      <div class="confirm-bar" id="confirm-wrap-${s.id}">
+        <span class="confirm-msg">Mark as installed?</span>
+        <button class="confirm-yes" onclick="confirmOutcome(${s.id}, event)">Confirm</button>
+        <button class="confirm-no" onclick="cancelConfirm(${s.id}, event)">Cancel</button>
+      </div>
       <div class="issue-note-wrap ${outcome && outcome.type === 'issue' ? 'visible' : ''}" id="issue-wrap-${s.id}">
         <textarea class="issue-textarea"
                   id="issue-note-${s.id}"
@@ -1372,24 +1413,22 @@ function toggleCard(id) {
 function selectOutcome(id, type, event) {
   event && event.stopPropagation();
 
-  const onlineBtn  = document.getElementById('btn-online-' + id);
-  const issueBtn   = document.getElementById('btn-issue-'  + id);
-  const issueWrap  = document.getElementById('issue-wrap-' + id);
+  const onlineBtn   = document.getElementById('btn-online-' + id);
+  const issueBtn    = document.getElementById('btn-issue-'  + id);
+  const issueWrap   = document.getElementById('issue-wrap-' + id);
+  const confirmWrap = document.getElementById('confirm-wrap-' + id);
 
   if (type === 'online') {
-    // Save immediately
-    const ts = new Date().toISOString();
-    state.outcomes[id] = {
-      type: 'online',
-      note: '',
-      timestamp: ts
-    };
-    saveState();
-    apiPost({ action: 'save', siteId: id, type: 'online', note: '', techName: state.techName, timestamp: ts });
-    // Update UI without full re-render for performance
-    refreshCardOutcome(id);
+    // Show confirmation bar
+    issueWrap && issueWrap.classList.remove('visible');
+    issueBtn  && issueBtn.classList.remove('selected');
+    issueBtn  && issueBtn.setAttribute('aria-pressed', 'false');
+    onlineBtn && onlineBtn.classList.add('selected');
+    onlineBtn && onlineBtn.setAttribute('aria-pressed', 'true');
+    confirmWrap && confirmWrap.classList.add('visible');
   } else {
     // Show textarea
+    confirmWrap && confirmWrap.classList.remove('visible');
     onlineBtn && onlineBtn.classList.remove('selected');
     onlineBtn && onlineBtn.setAttribute('aria-pressed', 'false');
     issueBtn  && issueBtn.classList.add('selected');
@@ -1398,6 +1437,28 @@ function selectOutcome(id, type, event) {
     const ta = document.getElementById('issue-note-' + id);
     ta && setTimeout(() => ta.focus(), 50);
   }
+}
+
+function confirmOutcome(id, event) {
+  event && event.stopPropagation();
+  const ts = new Date().toISOString();
+  state.outcomes[id] = {
+    type: 'online',
+    note: '',
+    timestamp: ts
+  };
+  saveState();
+  apiPost({ action: 'save', siteId: id, type: 'online', note: '', techName: state.techName, timestamp: ts });
+  refreshCardOutcome(id);
+}
+
+function cancelConfirm(id, event) {
+  event && event.stopPropagation();
+  const onlineBtn   = document.getElementById('btn-online-' + id);
+  const confirmWrap = document.getElementById('confirm-wrap-' + id);
+  onlineBtn && onlineBtn.classList.remove('selected');
+  onlineBtn && onlineBtn.setAttribute('aria-pressed', 'false');
+  confirmWrap && confirmWrap.classList.remove('visible');
 }
 
 function saveIssue(id) {
