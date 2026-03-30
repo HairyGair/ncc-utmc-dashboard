@@ -1,0 +1,25 @@
+# Route all requests through index.php and ensure PHP is handled correctly.
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow direct access to existing files (e.g. config.php is not public,
+    # but this prevents rewriting real file paths unintentionally)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Send everything else to index.php preserving the query string
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+# Force PHP 8.4 handler if cPanel exposes the AddHandler directive
+# Uncomment the line below if the host requires it:
+# AddHandler application/x-httpd-php84 .php
+
+# Deny direct access to config.php
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>

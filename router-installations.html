@@ -1128,6 +1128,29 @@ function saveState() {
   } catch(e) { /* ignore */ }
 }
 
+const API_BASE = 'api/index.php';
+
+function apiPost(data) {
+  fetch(API_BASE + '?page=installations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).catch(() => {});
+}
+
+async function loadFromApi() {
+  try {
+    const r = await fetch(API_BASE + '?page=installations');
+    const data = await r.json();
+    if (data.success) {
+      if (data.outcomes) state.outcomes = data.outcomes;
+      saveState();
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
 /* ══════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════ */
@@ -1354,12 +1377,14 @@ function selectOutcome(id, type, event) {
 
   if (type === 'online') {
     // Save immediately
+    const ts = new Date().toISOString();
     state.outcomes[id] = {
       type: 'online',
       note: '',
-      timestamp: new Date().toISOString()
+      timestamp: ts
     };
     saveState();
+    apiPost({ action: 'save', siteId: id, type: 'online', note: '', techName: state.techName, timestamp: ts });
     // Update UI without full re-render for performance
     refreshCardOutcome(id);
   } else {
@@ -1386,12 +1411,14 @@ function saveIssue(id) {
     return;
   }
 
+  const ts = new Date().toISOString();
   state.outcomes[id] = {
     type: 'issue',
     note: note,
-    timestamp: new Date().toISOString()
+    timestamp: ts
   };
   saveState();
+  apiPost({ action: 'save', siteId: id, type: 'issue', note, techName: state.techName, timestamp: ts });
   refreshCardOutcome(id);
 }
 
@@ -1400,6 +1427,7 @@ function editOutcome(id, event) {
   // Remove the outcome and re-render this card's action area
   delete state.outcomes[id];
   saveState();
+  apiPost({ action: 'edit', siteId: id });
   refreshCardOutcome(id);
 }
 
@@ -1480,6 +1508,7 @@ function clearAllData() {
   state.outcomes = {};
   state.techName = '';
   saveState();
+  apiPost({ action: 'clear' });
   document.getElementById('techName').value = '';
   closeModal('clearModal');
   renderAll();
@@ -1683,7 +1712,7 @@ function init() {
   // Show today's date
   document.getElementById('headerDate').textContent = formatDate(new Date());
 
-  // Load persisted state
+  // Load persisted state from localStorage first (instant)
   loadState();
 
   // Restore tech name
@@ -1694,6 +1723,9 @@ function init() {
 
   // Set filter bar offset after render
   requestAnimationFrame(setFilterBarOffset);
+
+  // Then load from API and re-render if newer data exists
+  loadFromApi().then(loaded => { if (loaded) renderAll(); });
 }
 
 document.addEventListener('DOMContentLoaded', init);

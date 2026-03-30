@@ -952,6 +952,30 @@ function getSiteWarnings(site) {
 const STORAGE_KEY = 'utmc_online_warnings_v1';
 let state = { techName: '', warnings: {}, techNotes: {} };
 
+const API_BASE = 'api/index.php';
+
+function apiPost(data) {
+  fetch(API_BASE + '?page=warnings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).catch(() => {});
+}
+
+async function loadFromApi() {
+  try {
+    const r = await fetch(API_BASE + '?page=warnings');
+    const data = await r.json();
+    if (data.success) {
+      if (data.warnings) state.warnings = data.warnings;
+      if (data.techNotes) state.techNotes = data.techNotes;
+      saveState();
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -974,12 +998,14 @@ function getWarningState(siteIdx, field) {
 
 function setWarningState(siteIdx, field, status, note) {
   if (!state.warnings[siteIdx]) state.warnings[siteIdx] = {};
+  const ts = new Date().toISOString();
   state.warnings[siteIdx][field] = {
     status,
     note: note || '',
-    timestamp: new Date().toISOString()
+    timestamp: ts
   };
   saveState();
+  apiPost({ action: 'warning', siteIdx, fieldName: field, status, note: note || '', techName: state.techName, timestamp: ts });
 }
 
 function clearWarningState(siteIdx, field) {
@@ -990,6 +1016,7 @@ function clearWarningState(siteIdx, field) {
     }
   }
   saveState();
+  apiPost({ action: 'reset', siteIdx, fieldName: field });
 }
 
 // ── FILTER STATE ──
@@ -1283,6 +1310,7 @@ function updateNote(siteIdx, field, value) {
   if (ws && ws.status === 'issue') {
     ws.note = value;
     saveState();
+    apiPost({ action: 'warning', siteIdx, fieldName: field, status: 'issue', note: value, techName: state.techName, timestamp: ws.timestamp });
   }
 }
 
@@ -1299,6 +1327,7 @@ function saveTechNote(siteIdx) {
       delete state.techNotes[siteIdx];
     }
     saveState();
+    apiPost({ action: 'technote', siteIdx, note: val, techName: state.techName });
     const saved = document.getElementById('technote-saved-' + siteIdx);
     if (saved) {
       saved.classList.add('visible');
@@ -1472,6 +1501,7 @@ function openClearModal() { openModal('clearModal'); }
 function clearAllData() {
   state = { techName: '', warnings: {}, techNotes: {} };
   saveState();
+  apiPost({ action: 'clear' });
   document.getElementById('techName').value = '';
   closeModal('clearModal');
   renderCards();
@@ -1495,6 +1525,7 @@ loadState();
 setDate();
 document.getElementById('techName').value = state.techName || '';
 renderCards();
+loadFromApi().then(loaded => { if (loaded) renderCards(); });
 </script>
 </body>
 </html>
