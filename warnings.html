@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UTMC Warnings">
+<title>UTMC Online Sites — Warning Tracker</title>
+<style>
+  :root {
+    --navy: #1B2A4A;
+    --navy-dark: #111E35;
+    --navy-light: #2A3F6B;
+    --accent: #2E7DCC;
+    --accent-light: #E8F2FB;
+    --bg: #F0F2F5;
+    --white: #FFFFFF;
+    --border: #DDE1E9;
+    --text: #1A1A2E;
+    --text-mid: #4A5568;
+    --text-light: #718096;
+    --green: #1A7F4B;
+    --green-bg: #EAF7F0;
+    --green-border: #A3D9B8;
+    --red: #B91C1C;
+    --red-bg: #FEF2F2;
+    --red-border: #FECACA;
+    --amber: #92400E;
+    --amber-bg: #FFFBEB;
+    --amber-border: #FDE68A;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+    color: white;
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .logo-wrap {
+    flex-shrink: 0;
+    background: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    line-height: 1;
+  }
+  .logo-wrap img { height: 36px; width: auto; display: block; }
+  .header-titles { flex: 1; }
+  .header-titles h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+  .header-titles p { font-size: 0.8rem; opacity: 0.75; margin-top: 2px; letter-spacing: 0.02em; text-transform: uppercase; }
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .date-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tech-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+  .tech-input-wrap label { font-size: 0.75rem; opacity: 0.7; white-space: nowrap; }
+  .tech-input-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 500;
+    width: 160px;
+    font-family: inherit;
+  }
+  .tech-input-wrap input::placeholder { color: rgba(255,255,255,0.4); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-section {
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-top: 12px;
+  }
+  .progress-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .progress-label span { font-weight: 600; opacity: 1; }
+  .progress-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    gap: 1px;
+  }
+  .progress-bar-resolved { background: #34C77B; border-radius: 4px 0 0 4px; transition: width 0.4s ease; }
+  .progress-bar-issues { background: #F87171; transition: width 0.4s ease; }
+  .progress-bar-pending { background: rgba(255,255,255,0.3); border-radius: 0 4px 4px 0; flex: 1; }
+  .progress-pills {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .progress-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+  .progress-pill-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-resolved { background: #34C77B; }
+  .dot-issues { background: #F87171; }
+  .dot-pending { background: rgba(255,255,255,0.4); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    box-shadow: var(--shadow);
+  }
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-group + .filter-group {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+  .filter-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    margin-right: 2px;
+  }
+  .pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text-mid);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  /* ── CONTENT ── */
+  .content { padding: 16px; max-width: 960px; margin: 0 auto; }
+  .site-count {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  /* ── SITE CARDS ── */
+  .site-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .site-card.status-clear {
+    border-color: var(--green-border);
+    background: linear-gradient(to right, var(--green-bg) 0%, var(--white) 100%);
+    box-shadow: 0 2px 12px rgba(26,127,75,0.1);
+  }
+  .site-card.status-issue {
+    border-color: var(--red-border);
+    background: linear-gradient(to right, var(--red-bg) 0%, var(--white) 100%);
+    box-shadow: 0 2px 12px rgba(185,28,28,0.1);
+  }
+  .site-card.status-partial {
+    border-color: var(--amber-border);
+    background: linear-gradient(to right, var(--amber-bg) 0%, var(--white) 100%);
+    box-shadow: 0 2px 12px rgba(146,64,14,0.1);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-status-bar {
+    width: 4px;
+    height: 36px;
+    border-radius: 2px;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .status-clear .card-status-bar { background: var(--green); }
+  .status-issue .card-status-bar { background: var(--red); }
+  .status-partial .card-status-bar { background: var(--amber); }
+
+  .card-header-info { flex: 1; min-width: 0; }
+  .card-header-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .scn-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--navy);
+    color: white;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .district-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+  .district-Newcastle     { background: #EEF2FF; color: #3730A3; }
+  .district-NorthTyneside { background: #E0F2FE; color: #075985; }
+  .district-Gateshead     { background: #F0FDF4; color: #166534; }
+  .district-SouthTyneside { background: #FFF7ED; color: #9A3412; }
+  .district-Sunderland    { background: #FDF4FF; color: #6B21A8; }
+  .district-Northumberland{ background: #FFF1F2; color: #9F1239; }
+
+  .site-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .warning-badge {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .warning-badge.wbadge-pending {
+    background: var(--amber-bg);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+  }
+  .warning-badge.wbadge-clear {
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+  }
+  .warning-badge.wbadge-issue {
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1px solid var(--red-border);
+  }
+  .warning-badge.wbadge-partial {
+    background: var(--amber-bg);
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+  }
+  .chevron {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    color: var(--text-light);
+    transition: transform 0.2s ease;
+  }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* ── CARD BODY ── */
+  .card-body {
+    display: none;
+    padding: 0 12px 12px 12px;
+    border-top: 1px solid var(--border);
+  }
+  .card-body.open { display: block; }
+
+  /* ── WARNING ROWS ── */
+  .warnings-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .warning-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .warning-row.wr-resolved {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+  }
+  .warning-row.wr-issue {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+  }
+  .warning-row-info { flex: 1; min-width: 0; }
+  .warning-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .warning-status-text {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .warning-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .w-btn {
+    width: 30px; height: 30px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: opacity 0.15s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  .w-btn:hover { opacity: 0.8; transform: scale(1.05); }
+  .w-btn:active { transform: scale(0.95); }
+  .w-btn-resolve {
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1.5px solid var(--green-border);
+  }
+  .w-btn-resolve.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+  .w-btn-issue {
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1.5px solid var(--red-border);
+  }
+  .w-btn-issue.active {
+    background: var(--red);
+    color: white;
+    border-color: var(--red);
+  }
+  .w-btn-reset {
+    background: var(--bg);
+    color: var(--text-light);
+    border: 1.5px solid var(--border);
+  }
+  .issue-note-wrap {
+    margin-top: 6px;
+  }
+  .issue-note-input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--red-border);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    background: white;
+    color: var(--text);
+    outline: none;
+    resize: none;
+  }
+  .issue-note-input:focus { border-color: var(--red); }
+  .issue-note-input::placeholder { color: var(--text-light); }
+
+  /* ── NOTES BOX ── */
+  .site-notes-box {
+    margin-top: 10px;
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: var(--amber);
+  }
+  .site-notes-box strong { display: block; margin-bottom: 2px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* ── TECH NOTE ── */
+  .tech-note-section {
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .tech-note-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .tech-note-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: var(--text);
+    resize: vertical;
+    background: var(--white);
+    transition: border-color 0.15s;
+  }
+  .tech-note-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(46,125,204,0.1);
+  }
+  .tech-note-textarea::placeholder { color: var(--text-light); }
+  .tech-note-saved {
+    font-size: 0.7rem;
+    color: var(--green);
+    font-weight: 600;
+    margin-top: 3px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .tech-note-saved.visible { opacity: 1; }
+
+  /* ── NAV BUTTON ── */
+  .nav-btn-wrap { padding: 10px 0 0; }
+  .nav-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px 10px; border-radius: var(--radius-sm);
+    border: 2px solid var(--accent); background: var(--accent-light);
+    color: var(--accent); font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer; min-height: 48px;
+    -webkit-tap-highlight-color: transparent; transition: all 0.15s ease;
+    text-decoration: none;
+  }
+  .nav-btn:hover, .nav-btn:active {
+    background: var(--accent); color: white;
+    box-shadow: 0 4px 12px rgba(46,125,204,0.3);
+  }
+  .nav-btn svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
+
+  /* ── LAST UPDATED ── */
+  .last-updated {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--text-light);
+    text-align: right;
+  }
+
+  /* ── NO WARNINGS STATE ── */
+  .no-warnings-msg {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--green);
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    position: sticky;
+    bottom: 0;
+    z-index: 90;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  }
+  .btn {
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    font-family: inherit;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-ghost { background: var(--bg); color: var(--text-mid); border: 1.5px solid var(--border); }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--navy);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 1rem; font-weight: 700; }
+  .modal-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+  .report-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    white-space: pre-wrap;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    max-height: 400px;
+    overflow-y: auto;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── CONFIRM MODAL ── */
+  .confirm-modal-body p { font-size: 0.9rem; color: var(--text-mid); line-height: 1.6; }
+  .confirm-modal-body strong { color: var(--red); }
+
+  /* ── NO SITES ── */
+  .no-sites-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    .header { padding: 14px 14px 12px; }
+    .header-titles h1 { font-size: 1.05rem; }
+    .header-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .tech-input-wrap input { width: 130px; }
+    .content { padding: 10px; }
+    .warning-row {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .warning-row-actions { justify-content: flex-start; }
+    .toolbar { padding: 8px 10px; }
+    .btn { font-size: 0.78rem; padding: 7px 14px; }
+    .site-name { font-size: 0.8rem; }
+    .progress-pills { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-top">
+    <div class="logo-wrap">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALUAAAAuCAYAAABu8lgpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NEFBNDE4QTkyNEZBMTFFM0I2RUE5MjBDM0FDRkMwRDQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NEFBNDE4QUEyNEZBMTFFM0I2RUE5MjBDM0FDRkMwRDQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0QUE0MThBNzI0RkExMUUzQjZFQTkyMEMzQUNGQzBENCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0QUE0MThBODI0RkExMUUzQjZFQTkyMEMzQUNGQzBENCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PrTDFrkAACSMSURBVHja7J0LuFVz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" alt="NCC Logo">
+    </div>
+    <div class="header-titles">
+      <h1>UTMC Online Sites &mdash; Warning Tracker</h1>
+      <p>Outstanding Checks &amp; Updates</p>
+    </div>
+    <div class="header-meta">
+      <div class="date-badge" id="dateBadge"></div>
+      <div class="tech-input-wrap">
+        <label for="techName">Technician:</label>
+        <input type="text" id="techName" placeholder="Your name..." autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <div class="progress-section">
+    <div class="progress-label">
+      <span id="progressLabel">Loading...</span>
+      <span id="progressFraction"></span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-resolved" id="barResolved" style="width:0%"></div>
+      <div class="progress-bar-issues" id="barIssues" style="width:0%"></div>
+      <div class="progress-bar-pending" id="barPending"></div>
+    </div>
+    <div class="progress-pills">
+      <div class="progress-pill"><div class="progress-pill-dot dot-resolved"></div><span id="pillResolved">0 Resolved</span></div>
+      <div class="progress-pill"><div class="progress-pill-dot dot-issues"></div><span id="pillIssues">0 Issues</span></div>
+      <div class="progress-pill"><div class="progress-pill-dot dot-pending"></div><span id="pillPending">0 Pending</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">District:</span>
+    <button class="pill active" onclick="setDistrictFilter('all', this)">All</button>
+    <button class="pill" onclick="setDistrictFilter('Newcastle', this)">Newcastle</button>
+    <button class="pill" onclick="setDistrictFilter('North Tyneside', this)">N. Tyneside</button>
+    <button class="pill" onclick="setDistrictFilter('Gateshead', this)">Gateshead</button>
+    <button class="pill" onclick="setDistrictFilter('South Tyneside', this)">S. Tyneside</button>
+    <button class="pill" onclick="setDistrictFilter('Sunderland', this)">Sunderland</button>
+    <button class="pill" onclick="setDistrictFilter('Northumberland', this)">Northumberland</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Status:</span>
+    <button class="pill active" onclick="setStatusFilter('all', this)">All</button>
+    <button class="pill" onclick="setStatusFilter('pending', this)">Pending</button>
+    <button class="pill" onclick="setStatusFilter('partial', this)">Partial</button>
+    <button class="pill" onclick="setStatusFilter('clear', this)">Clear</button>
+    <button class="pill" onclick="setStatusFilter('issue', this)">Issues</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<main class="content">
+  <div class="site-count" id="siteCount"></div>
+  <div id="cardsList"></div>
+</main>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="openReportModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Generate Report
+  </button>
+  <button class="btn btn-outline" onclick="downloadCSV()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download CSV
+  </button>
+  <button class="btn btn-danger" onclick="openClearModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    Clear All Data
+  </button>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Generate Report</h2>
+      <button class="modal-close" onclick="closeModal('reportModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="report-text" id="reportText"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reportModal')">Close</button>
+      <button class="btn btn-primary" onclick="downloadReport()">Download .txt</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR CONFIRM MODAL -->
+<div class="modal-overlay" id="clearModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Clear All Data</h2>
+      <button class="modal-close" onclick="closeModal('clearModal')">&times;</button>
+    </div>
+    <div class="modal-body confirm-modal-body">
+      <p>This will permanently erase <strong>all warning resolutions, issue notes, and the technician name</strong> from this device.<br><br>This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clearModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="clearAllData()">Yes, Clear Everything</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SITE DATA ──
+const sites = [
+  {"scn":"X06110","site":"0011 John Dobson St / Market St E","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97379513799816,"lon":-1.608959037300025},
+  {"scn":"X16130","site":"0020 A186 Westgate Rd / Brighton Gr","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97385323766181,"lon":-1.642568859272586},
+  {"scn":"X18180","site":"0021 A193 Shields Rd / Benfield Rd","district":"Newcastle","anpr":"ANPR Pole 4, 10 and 16","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98479689353478,"lon":-1.558950463422477},
+  {"scn":"X16370","site":"0029 A6085 Scotswood Rd / A1 J74","district":"Newcastle","anpr":"ANPR Pole 7, 9, 17, 24 and 31","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.97020775754677,"lon":-1.693382676375492},
+  {"scn":"X18130","site":"0031 A193 New Bridge St / B1600 Stoddart St","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97478381240634,"lon":-1.596687267804555},
+  {"scn":"X16250","site":"0044 Wingrove Rd / Nuns Moor Rd","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98070536998876,"lon":-1.647577717388444},
+  {"scn":"X17290","site":"0045 Benfield Rd / A1058 Coast Rd","district":"Newcastle","anpr":"ANPR Pole 9 and 18","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"UPDATE","mova":"N/A","notes":"Upload new IC4 with Stage 5 UTC Special Conditioning","lastUpdate":"2025-04-03","lat":54.99457268191526,"lon":-1.566333614699076},
+  {"scn":"X16120","site":"0046 A186 Westgate Rd / B1311 Elswick Rd","district":"Newcastle","anpr":"ANPR Pole 5, 12, 16 and awareAI","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.97168761069634,"lon":-1.62943980332912},
+  {"scn":"X16180","site":"0049 A186 West Rd / B1305 Condercum Rd","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97643882149922,"lon":-1.658684954962752},
+  {"scn":"X10140","site":"0059 A189 St. James' Bvd / A186 Westgate Rd","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97080311615258,"lon":-1.622710429218401},
+  {"scn":"X19180","site":"0076 B1318 Grt North Rd / Forsyth Rd","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.99178143821414,"lon":-1.615277225999733},
+  {"scn":"X06130","site":"0082 B1309 Durant Rd / John Dobson St","district":"Newcastle","anpr":"Viva City Pole 9","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97566901192333,"lon":-1.610369255215417},
+  {"scn":"X17140","site":"0085A A188 Benton Rd / High Heaton Supermkt","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99679956640941,"lon":-1.580525715221427},
+  {"scn":"X17150","site":"0088 A188 Benton Rd / Etherstone Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99541098424701,"lon":-1.580144105222554},
+  {"scn":"X18120","site":"0090 A193 New Bridge St / B1600 Gibson St","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97440077130554,"lon":-1.599170252254666},
+  {"scn":"X18110","site":"0095 A193 New Bridge St / Argyle St","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97432231000557,"lon":-1.603663616610163},
+  {"scn":"X18220","site":"0097 B1312 Shields Rd / Brinkburn St","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97695452210538,"lon":-1.581842899787873},
+  {"scn":"X18240","site":"0098 B1312 Shields Rd / Heaton Rd","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97737394116004,"lon":-1.57907544179983},
+  {"scn":"X18260","site":"0099 B1312 Shields Rd / Potts St","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97775048916251,"lon":-1.57627167783761},
+  {"scn":"X16160","site":"0104 A186 West Rd / Gowland Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97558734141091,"lon":-1.653547487236565},
+  {"scn":"X16220","site":"0106 A186 West Rd / Slatyford Ln","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98345288937169,"lon":-1.688009923646177},
+  {"scn":"X18210","site":"0116 B1312 Shields Rd / Heaton Pk Rd","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97661204747986,"lon":-1.584369112741968},
+  {"scn":"X16140","site":"0122 A186 Westgate Rd / Campus for Ageing & Vitality","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-23","lat":54.97408423243698,"lon":-1.644082518160114},
+  {"scn":"X16140","site":"0122 A186 Westgate Rd / Campus for Ageing/Vitality","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97408423243698,"lon":-1.644082518160114},
+  {"scn":"X16150","site":"0123 A186 Westgate Rd / Grainger Pk Rd","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97439804088459,"lon":-1.646363759151683},
+  {"scn":"X04320","site":"0131W A186 Mosley St / A186 Pilgrim St","district":"Newcastle","anpr":"ANPR Pole 3, 6 and 9","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97155992408693,"lon":-1.608714460318737},
+  {"scn":"X08170","site":"0148 B1318 High St / A191 Church Rd","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.00719608624078,"lon":-1.619676699870539},
+  {"scn":"X19120","site":"0150 A1058 Cradlewell / Osborne Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.98719275802788,"lon":-1.593759017264318},
+  {"scn":"X17220","site":"0246 A188 Chillingham Rd / Meldon Tce","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98518787267638,"lon":-1.576467067382708},
+  {"scn":"X18350","site":"0250 A187 Fossway / Westbourne Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.98281854932178,"lon":-1.552489665855347},
+  {"scn":"X13230","site":"0252 A167 Ponteland Rd / Brieryside","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9929849709823,"lon":-1.657923745740249},
+  {"scn":"X13140","site":"0275A A189 Grandstand Rd / A167 (S)","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.98860306242214,"lon":-1.638617439149371},
+  {"scn":"X13340","site":"0275B A189 Grandstand Rd / A167 (N)","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.98860306242214,"lon":-1.638617439149371},
+  {"scn":"X18230","site":"0277 B1312 Shields Rd / Raby St","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97715938652457,"lon":-1.580340241965516},
+  {"scn":"X18250","site":"0278 B1312 Shields Rd / Headlam St","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97754814494405,"lon":-1.577615743213173},
+  {"scn":"X08140","site":"0287 B1318 High St / St. Nicholas Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.00479920133029,"lon":-1.620171271730854},
+  {"scn":"X13310","site":"0299 A167 Stamfordham Rd / Greenvale Ave","district":"Newcastle","anpr":"ANPR Pole 3 and 6","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99342119038572,"lon":-1.677604019749083},
+  {"scn":"X18190","site":"0305 B1312 Shields Rd / Byker Supermkt","district":"Newcastle","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97645105458016,"lon":-1.58546644025715},
+  {"scn":"X06220","site":"0308 B1309 Durant Rd / Ellison Pl","district":"Newcastle","anpr":"Viva City Pole 12","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97597350936918,"lon":-1.608982650644848},
+  {"scn":"X17110","site":"0311 A188 Benton Rd / Fairville Cres","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.00474794874681,"lon":-1.577409042164391},
+  {"scn":"X16210","site":"0319 A186 West Rd / Silverhill Dr","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98105175647274,"lon":-1.67864930337673},
+  {"scn":"X18150","site":"0320 A193 Shields Rd / Newcastle Shopping Pk","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9810946223005,"lon":-1.571534925439238},
+  {"scn":"X18330","site":"0321 A187 Fossway / Huddleston Rd","district":"Newcastle","anpr":"ANPR Pole 6, 16, 22 and 32","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97919476703953,"lon":-1.569932809626252},
+  {"scn":"X18140","site":"0322 A193 Shields Rd / Henley St","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98098635277437,"lon":-1.572671160515881},
+  {"scn":"X13280","site":"0362 A167 Stamfordham Rd / St. James Retail Pk","district":"Newcastle","anpr":"ANPR Pole 6, 12, 15 and 22","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.99092929581754,"lon":-1.674761238672474},
+  {"scn":"X16240","site":"0364 Wingrove Rd / Hadrian Rd","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97775292708244,"lon":-1.647504270093947},
+  {"scn":"X17120","site":"0372 A188 Benton Rd / Wagonway","district":"Newcastle","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.00135401452402,"lon":-1.579591691454735},
+  {"scn":"X08210","site":"0390 B1318 Grt North Rd / Hollywood Ave","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.012312,"lon":-1.62081},
+  {"scn":"X08190","site":"0500 B1318 Grt North Rd / Regent Ctr I/C (S)","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.01098237800185,"lon":-1.620691054009782},
+  {"scn":"X09130","site":"1001 B1318 Grt North Rd / Brunton Ln","district":"Newcastle","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.0289092633493,"lon":-1.622926552288106},
+  {"scn":"X17250","site":"1011 Coach Ln / University Access","district":"Newcastle","anpr":"ANPR Pole 16","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"N/A","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-03-26","lat":55.00584469438886,"lon":-1.572212228387429},
+  {"scn":"X15110","site":"1437 A167 & B6324 Stamfordham Rd / A1 J76","district":"Newcastle","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99519471833611,"lon":-1.680836518958969},
+  {"scn":"X30130","site":"2032 Norham Rd N / Middle Engine Ln","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.02117730584661,"lon":-1.490615655722607},
+  {"scn":"X91170","site":"2850 A193 High St E/W / A186 Station Rd","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99110917467981,"lon":-1.533693118419961},
+  {"scn":"X91130","site":"2853 A193 Tynemouth Rd / B1315 Churchill St","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99621389867941,"lon":-1.503257044217506},
+  {"scn":"X91190","site":"2858 A193 High St E / Park Rd","district":"North Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99164816221747,"lon":-1.531007797654482},
+  {"scn":"X91180","site":"2870 A187 Hadrian Rd / A186 Station Rd","district":"North Tyneside","anpr":"ANPR Pole 1","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"Pole 1 was knocked down in RTC, power cable needed re-installing on replacement","lastUpdate":"2024-12-03","lat":54.9886980112589,"lon":-1.530980602610782},
+  {"scn":"X90120","site":"3259 A188 Benton Ln / West Farm Ave","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.012946,"lon":-1.581774},
+  {"scn":"X90140","site":"3270 A191 Front St / Coach Ln","district":"North Tyneside","anpr":"N/A","signalDetection":"Queue loop QW missing","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.01017408328278,"lon":-1.573752531124313},
+  {"scn":"X90110","site":"3273 A188 Benton Ln/Rd / A191 Front St","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.00914679585091,"lon":-1.578558230672174},
+  {"scn":"X90170","site":"3317 A191 Whitley Rd / Benton Supermkt","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.02098643379638,"lon":-1.538569091646521},
+  {"scn":"X90320","site":"3635 A189 / A1056 Killingworth Way & Sandy Ln","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"UTMC licence issues keep appearing due to old firmware","lastUpdate":"2026-01-15","lat":55.03956105177819,"lon":-1.592420523834203},
+  {"scn":"X90250","site":"3660 A189 / White House Dr","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.03191998189421,"lon":-1.590805300567935},
+  {"scn":"X90230","site":"3661 A188 Benton Ln / Quorum","district":"North Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":55.01992344428282,"lon":-1.584761626002851},
+  {"scn":"X20160","site":"4011 B1426 Bensham Rd / Saltwell Rd","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95096671391804,"lon":-1.617198150684473},
+  {"scn":"X03150","site":"4015 A167 Durham Rd / Shipcote Tce","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95130250342995,"lon":-1.59900333172098},
+  {"scn":"X27110","site":"4016 B1296 Old Durham Rd / Split Crow Rd","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95185664817675,"lon":-1.595987577883861},
+  {"scn":"X03160","site":"4017 A167 Durham Rd / Prince Consort Rd","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94961611718948,"lon":-1.599127710674352},
+  {"scn":"X01190","site":"4019 A184 (Felling Bypass) / A185 & B1426 Shields Rd","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95179901490789,"lon":-1.553950962902316},
+  {"scn":"X26210","site":"4022 A195 Lingey Ln / B1288 Leam Ln","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.93973590927226,"lon":-1.533789553759178},
+  {"scn":"X23120","site":"4024 A167 Durham Rd / Belle Vue Bk","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93704555157382,"lon":-1.599737382505666},
+  {"scn":"X23160","site":"4025 A167 Durham Rd / Kells Ln","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.93092125565104,"lon":-1.597504706160819},
+  {"scn":"X22150","site":"4028 A167 Durham Rd / Station Ln","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.89630614239323,"lon":-1.577704535445392},
+  {"scn":"X22140","site":"4029 A167 Durham Rd / B1288 Birtley Ln","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.898059,"lon":-1.577398},
+  {"scn":"X22180","site":"4031 A167 Durham Rd / Harras Bank","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.89229859732005,"lon":-1.577173749511786},
+  {"scn":"X20140","site":"4041 A692 Consett Rd / B6317 Whickham Hwy","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.93937676037928,"lon":-1.639297454803483},
+  {"scn":"X20130","site":"4042 B1426 Lobley Hill Rd / Kingsway North","district":"Gateshead","anpr":"ANPR Pole 5, 8, 15, 18, 21 and 28","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.94285098502001,"lon":-1.625571225151784},
+  {"scn":"X05210","site":"4045 A1114 Handy Dr / Mandela Way","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95952232647493,"lon":-1.664642973029018},
+  {"scn":"X20150","site":"4056 B1426 Lobley Hill Rd / Victoria Rd","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94888449598267,"lon":-1.621498592184977},
+  {"scn":"X23110","site":"4059 A167 Durham Rd / Joicey Rd","district":"Gateshead","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94009494446561,"lon":-1.599561710554383},
+  {"scn":"X27120","site":"4060 B1296 Old Durham Rd / Pottersway","district":"Gateshead","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94291324158893,"lon":-1.589999232607027},
+  {"scn":"X03170","site":"4061 A167 Durham Rd / Enfield Rd","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9476645272883,"lon":-1.599310421926468},
+  {"scn":"X20180","site":"4065 B1426 Bensham Rd / Second St","district":"Gateshead","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95476767452266,"lon":-1.614487978301867},
+  {"scn":"X27170","site":"4070 B1296 Springwell Rd / High St","district":"Gateshead","anpr":"ANPR Pole 3, 5, 7 and 10","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9255561503239,"lon":-1.575075063285197},
+  {"scn":"X03250","site":"4073 Prince Consort Rd / Shipcote Ln","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95084360957183,"lon":-1.600699816795327},
+  {"scn":"X20120","site":"4077E B1426 Lobley Hill Rd / A1 J68 (E)","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.94056653976011,"lon":-1.630592273886919},
+  {"scn":"X20110","site":"4077W A692 Lobley Hill Rd / A1 J68 (W)","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.94056653976011,"lon":-1.630592273886919},
+  {"scn":"X27150","site":"4104 B1296 Old Durham Rd / Beacon Lough Rd","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93400975191152,"lon":-1.582007668410156},
+  {"scn":"X27130","site":"4108 B1296 Old Durham Rd / Kells Ln","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.94123594181873,"lon":-1.58836165030641},
+  {"scn":"X03210","site":"4109 A184 (WCR) / Gateshead I/C","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.96174531586727,"lon":-1.605895205803549},
+  {"scn":"X26160","site":"4111 B1426 Sunderland Rd / Stoneygate Ln","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95122720211107,"lon":-1.562174776489982},
+  {"scn":"X20210","site":"4115 B1426 Bensham Rd / Coatsworth Rd","district":"Gateshead","anpr":"ANPR Pole 7, 9 and 13","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95855911140412,"lon":-1.61034429141877},
+  {"scn":"X27140","site":"4119 B1296 Old Durham Rd / Queen Elizabeth Ave","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93728616178321,"lon":-1.584661914065464},
+  {"scn":"X23140","site":"4128 A167 Durham Rd / Albert Dr","district":"Gateshead","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93506929158882,"lon":-1.59936891921597},
+  {"scn":"X24110","site":"4133 A1114 Colliery Rd / Kingfisher Ct","district":"Gateshead","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95710540202705,"lon":-1.643147335729211},
+  {"scn":"X24120","site":"4142 A1114 Clockmill Rd / Team St","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95495074352388,"lon":-1.636220354179571},
+  {"scn":"X24130","site":"4143 Team St / Teemers Dr","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95502782378104,"lon":-1.633457908992597},
+  {"scn":"X24140","site":"4144 Team St / Askew Rd W","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95632319819722,"lon":-1.626452126396998},
+  {"scn":"X05220","site":"4148 A1114 Riverside Way / Delta Bank Rd","district":"Gateshead","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.96154159002818,"lon":-1.67035745138546},
+  {"scn":"X27160","site":"4153 B1296 Old Durham Rd / Whitehouse Ln","district":"Gateshead","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93079141095436,"lon":-1.579056049771921},
+  {"scn":"X26190","site":"4165 A195 Lingey Ln / Meresyde","district":"Gateshead","anpr":"ANPR Pole 1, 3 and 6","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.945408,"lon":-1.535191},
+  {"scn":"X26180","site":"4166 A195 Lingey Ln / Kirkwood Gdns","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94689339065597,"lon":-1.535184634544448},
+  {"scn":"X03240","site":"4169 A167 Gateshead Hwy / Sunderland Rd","district":"Gateshead","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.95934051265372,"lon":-1.598451654975886},
+  {"scn":"X03370","site":"5019 Lambton St / Trinity Sq Car Pk","district":"Gateshead","anpr":"ANPR Pole 14 and 17","signalDetection":"CHECK","controllerInstall":"INSTALL","antennas":"INSTALLED","firmware":"INSTALL","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-19","lat":54.96392399999999,"lon":-1.60343},
+  {"scn":"X41110","site":"6011 A183 Beach Rd / Fowler St","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.995178,"lon":-1.429954},
+  {"scn":"X41120","site":"6013 A1018 Westoe Rd / A194 Crossgate","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99471,"lon":-1.429859},
+  {"scn":"X41610","site":"6015 A1018 Westoe Rd / B1298 Chichester Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.99080464845687,"lon":-1.427736765754673},
+  {"scn":"X41260","site":"6020 B1298 Stanhope Rd / Mortimer St","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98534070140111,"lon":-1.430012310857094},
+  {"scn":"X41440","site":"6026 A194 Western App / Dean Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.98048804732891,"lon":-1.441144447832853},
+  {"scn":"X41280","site":"6027 B1298 Stanhope Rd / B1302 Boldon Ln","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.97448736459688,"lon":-1.44039851123749},
+  {"scn":"X41240","site":"6034 Sunderland Rd / A1300 Prince Edward Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97192553102801,"lon":-1.410584792949521},
+  {"scn":"X41510","site":"6047 A1300 John Reid Rd / Perth Ave","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.96547215933422,"lon":-1.459652555368664},
+  {"scn":"X41250","site":"6050 A1300 Prince Edward Rd / Gorse Ave","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.97187539316163,"lon":-1.408458788267566},
+  {"scn":"X41540","site":"6058 A1300 John Reid Rd / Hospital","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.96930454188153,"lon":-1.427242755004158},
+  {"scn":"X41580","site":"6060 A1018 Sunderland Rd / Grosvenor Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"UPDATE","mova":"CHECK","notes":"Callum G to update UTC IC4 data that's incorrect","lastUpdate":"2026-01-30","lat":54.98443827412241,"lon":-1.42158383376416},
+  {"scn":"X42110","site":"6068 B1298 Hubert St / North Rd","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94899838442684,"lon":-1.461853050250255},
+  {"scn":"X41530","site":"6071 A1300 John Reid Rd / Chesterton Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.96576326871722,"lon":-1.445412998422365},
+  {"scn":"X41330","site":"6082 B1298 Whiteleas Way / A1300 John Reid Rd","district":"South Tyneside","anpr":"ANPR Pole 1 and 3","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.96648815444713,"lon":-1.436746983913679},
+  {"scn":"X41130","site":"6090 A194 Crossgate / Garden Ln","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.99423120202399,"lon":-1.431347037934722},
+  {"scn":"X42170","site":"6505 A183 East St / B1299 Front St","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94970387669774,"lon":-1.364426026332893},
+  {"scn":"X41340","site":"6508 B1298 Benton Rd / Galsworthy Rd","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.960751,"lon":-1.4387},
+  {"scn":"X42280","site":"6853 A184 Front St & Sunderland Rd / B1299 Station Rd","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94445289236816,"lon":-1.42786914222765},
+  {"scn":"X42250","site":"6854 A184 Front St & Western Tce / Boker Ln","district":"South Tyneside","anpr":"ANPR Pole 1, 3, 4 and 6","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94570364418446,"lon":-1.439400895041018},
+  {"scn":"X42220","site":"6855 A184 Addison Rd / Hylton Ln","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.94264449290639,"lon":-1.453826680702889},
+  {"scn":"X42150","site":"6866 B1298 New Rd / Boker Ln","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.95121216670066,"lon":-1.440436459178031},
+  {"scn":"X42120","site":"6868 B1298 Abingdon Way / Didcot Way","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALL","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"Site upgrade for STC cycle scheme","lastUpdate":"2026-01-14","lat":54.94412034801263,"lon":-1.465684030732618},
+  {"scn":"X41450","site":"7204 A194 Western App / B1302 Hudson St","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.978294,"lon":-1.446029},
+  {"scn":"X41460","site":"7205 A194 Newcastle Rd / A185 Jarrow Rd","district":"South Tyneside","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.97651155467308,"lon":-1.451075479444328},
+  {"scn":"X40110","site":"7210 A194 Leam Ln / A1300 John Reid Rd","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.96791045094546,"lon":-1.467203875586279},
+  {"scn":"X41470","site":"7335 A194 Newcastle Rd / Hobson Way","district":"South Tyneside","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.97502041680418,"lon":-1.452433497292422},
+  {"scn":"X61150","site":"8001 A183 Chester Rd / Kayll Rd","district":"Sunderland","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.90052466922189,"lon":-1.409568268805401},
+  {"scn":"X53240","site":"8002 A183 Whitburn Rd / B1291 Dykelands Rd","district":"Sunderland","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.93481182144568,"lon":-1.368581971754986},
+  {"scn":"X53210","site":"8006 A1018 Newcastle Rd / B1291 Thompson Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.92724939005708,"lon":-1.389051972297423},
+  {"scn":"X53130","site":"8008 A1290 Roker Ave / Fulwell Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91558252398529,"lon":-1.378346099356989},
+  {"scn":"X53220","site":"8012 B1291 Station Rd / Sea Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.92947592975686,"lon":-1.381649542312317},
+  {"scn":"X53110","site":"8014 A1018 North Bridge St / A183 Dame Dorothy St","district":"Sunderland","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91153341517217,"lon":-1.383242210058953},
+  {"scn":"X53150","site":"8015 A1018 Newcastle Rd / A1290 Southwick Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91484,"lon":-1.382747},
+  {"scn":"X53120","site":"8027 A183 Dame Dorothy St / A1290 Church St N","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91372581659868,"lon":-1.376107451129806},
+  {"scn":"X56180","site":"8030 Fawcett St / High St W","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"INSTALLED","ic4":"N/A","mova":"N/A","notes":"Router failed","lastUpdate":"2026-01-15","lat":54.90746625574555,"lon":-1.382023189008564},
+  {"scn":"X62140","site":"8041 A690 Silksworth Ln / Queen Alexandra Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.8927101937017,"lon":-1.400349336165164},
+  {"scn":"X62150","site":"8042 A690 Durham Rd / Barnes Park Rd","district":"Sunderland","anpr":"ANPR Pole 6","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.89323976996098,"lon":-1.402701543621646},
+  {"scn":"X62130","site":"8042A A690 Durham Rd / Silksworth Ln","district":"Sunderland","anpr":"ANPR Pole 8","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.89374478269507,"lon":-1.400266873894509},
+  {"scn":"X53140","site":"8079 A1018 Newcastle Rd / Crozier St","district":"Sunderland","anpr":"INSTALLED","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91890148614584,"lon":-1.384680837873546},
+  {"scn":"X53170","site":"8087 A1290 Roker Ave / Shore St","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91510396599904,"lon":-1.380229408464283},
+  {"scn":"X61180","site":"8102 A183 Chester Rd / Stewart St","district":"Sunderland","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9020597691435,"lon":-1.401523727152267},
+  {"scn":"X53160","site":"8106 A1018 Newcastle Rd / Sunderland Retail Pk","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.91573892574754,"lon":-1.382675854709159},
+  {"scn":"X61130","site":"8116 A183 The Broadway / Glenleigh Dr","district":"Sunderland","anpr":"INSTALLED","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.89405098707704,"lon":-1.432892589066682},
+  {"scn":"X50120","site":"8134 A1231 St. Michael's Way / A183 Chester Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.90433132520936,"lon":-1.389745770190274},
+  {"scn":"X61160","site":"8161 A183 Chester Rd / Hospital Exit","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.90094551759303,"lon":-1.408052302718738},
+  {"scn":"X61210","site":"8168 A183 Chester Rd / University Library","district":"Sunderland","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"INSTALL","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9038545686823,"lon":-1.391577864165229},
+  {"scn":"X61240","site":"8185 A183 Chester Rd / Bonavista Dr","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.89108296575707,"lon":-1.446243348171304},
+  {"scn":"X50150","site":"8200 Chester Rd / Green Tce","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.9045875616786,"lon":-1.388871902072562},
+  {"scn":"X62170","site":"8603 A690 Durham Rd / B1405 Premier Rd","district":"Sunderland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"UPDATE","ic4":"N/A","mova":"CHECK","notes":"","lastUpdate":"2026-01-14","lat":54.8880423854768,"lon":-1.418873215842453},
+  {"scn":"X62190","site":"8614 A690 Durham Rd / Bridle Path","district":"Sunderland","anpr":"N/A","signalDetection":"N/A","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":54.87517678070339,"lon":-1.437309580213508},
+  {"scn":"X57160","site":"9652 A1290 Washington Rd / International Dr (N)","district":"Sunderland","anpr":"ANPR Pole 8, 13 and 23","signalDetection":"INSTALLED","controllerInstall":"INSTALLED","antennas":"INSTALLED","firmware":"N/A","ic4":"N/A","mova":"OFFLINE","notes":"","lastUpdate":"2025-10-13","lat":54.921397,"lon":-1.478078},
+  {"scn":"X83110","site":"CM05 A192 Newgate St / Manchester St","district":"Northumberland","anpr":"N/A","signalDetection":"CHECK","controllerInstall":"INSTALLED","antennas":"CHECK","firmware":"N/A","ic4":"N/A","mova":"N/A","notes":"","lastUpdate":"2026-01-14","lat":55.1693513582857,"lon":-1.691390377391301}
+];
+
+// ── WARNING FIELD CONFIG ──
+// field, exclude values (treated as "no warning"), display label
+const WARNING_FIELDS = [
+  { field: 'signalDetection', exclude: ['N/A','INSTALLED'], label: 'Signal Detection' },
+  { field: 'antennas',        exclude: ['N/A','INSTALLED'], label: '5G Antennas' },
+  { field: 'firmware',        exclude: ['N/A','INSTALLED'], label: 'Licence / Firmware' },
+  { field: 'mova',            exclude: ['N/A'],             label: 'MOVA Online' },
+  { field: 'ic4',             exclude: ['N/A'],             label: 'IC4 Update' },
+  { field: 'controllerInstall', exclude: ['INSTALLED'],     label: 'Controller Install' },
+  { field: 'anpr',            exclude: ['N/A','INSTALLED'], label: 'ANPR / Smart Detection' },
+];
+
+function getSiteWarnings(site) {
+  return WARNING_FIELDS.filter(wf => !wf.exclude.includes(site[wf.field]));
+}
+
+// ── STATE ──
+const STORAGE_KEY = 'utmc_online_warnings_v1';
+let state = { techName: '', warnings: {}, techNotes: {} };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state.techName = saved.techName || '';
+      state.warnings = saved.warnings || {};
+      state.techNotes = saved.techNotes || {};
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getWarningState(siteIdx, field) {
+  return (state.warnings[siteIdx] && state.warnings[siteIdx][field]) || null;
+}
+
+function setWarningState(siteIdx, field, status, note) {
+  if (!state.warnings[siteIdx]) state.warnings[siteIdx] = {};
+  state.warnings[siteIdx][field] = {
+    status,
+    note: note || '',
+    timestamp: new Date().toISOString()
+  };
+  saveState();
+}
+
+function clearWarningState(siteIdx, field) {
+  if (state.warnings[siteIdx]) {
+    delete state.warnings[siteIdx][field];
+    if (Object.keys(state.warnings[siteIdx]).length === 0) {
+      delete state.warnings[siteIdx];
+    }
+  }
+  saveState();
+}
+
+// ── FILTER STATE ──
+let activeDistrict = 'all';
+let activeStatus = 'all';
+
+// ── COMPUTE SITE STATUS ──
+function computeSiteStatus(siteIdx) {
+  const site = sites[siteIdx];
+  const warnings = getSiteWarnings(site);
+  if (warnings.length === 0) return 'nowarnings';
+  const ws = state.warnings[siteIdx] || {};
+  const resolved = warnings.filter(w => ws[w.field] && ws[w.field].status === 'resolved').length;
+  const issues = warnings.filter(w => ws[w.field] && ws[w.field].status === 'issue').length;
+  if (issues > 0) return 'issue';
+  if (resolved === warnings.length) return 'clear';
+  if (resolved > 0) return 'partial';
+  return 'pending';
+}
+
+// ── PROGRESS TOTALS ──
+function computeTotals() {
+  let total = 0, resolved = 0, issues = 0;
+  sites.forEach((site, idx) => {
+    const ws = getSiteWarnings(site);
+    total += ws.length;
+    const sw = state.warnings[idx] || {};
+    ws.forEach(w => {
+      if (sw[w.field]) {
+        if (sw[w.field].status === 'resolved') resolved++;
+        else if (sw[w.field].status === 'issue') issues++;
+      }
+    });
+  });
+  return { total, resolved, issues, pending: total - resolved - issues };
+}
+
+// ── HTML ESCAPE ──
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ── RENDER PROGRESS ──
+function renderProgress() {
+  const { total, resolved, issues, pending } = computeTotals();
+  const pct = n => total > 0 ? Math.round(n / total * 100) : 0;
+  document.getElementById('progressLabel').textContent = `${resolved + issues} of ${total} warnings addressed`;
+  document.getElementById('progressFraction').textContent = `${pct(resolved + issues)}%`;
+  document.getElementById('barResolved').style.width = pct(resolved) + '%';
+  document.getElementById('barIssues').style.width = pct(issues) + '%';
+  document.getElementById('pillResolved').textContent = `${resolved} Resolved`;
+  document.getElementById('pillIssues').textContent = `${issues} Issues`;
+  document.getElementById('pillPending').textContent = `${pending} Pending`;
+}
+
+// ── FILTER HELPERS ──
+function districtClass(district) {
+  return 'district-' + district.replace(/\s/g,'');
+}
+
+function matchesFilters(siteIdx) {
+  const site = sites[siteIdx];
+  if (activeDistrict !== 'all' && site.district !== activeDistrict) return false;
+  if (activeStatus !== 'all') {
+    const st = computeSiteStatus(siteIdx);
+    if (activeStatus === 'pending' && st !== 'pending' && st !== 'nowarnings') return false;
+    if (activeStatus === 'partial' && st !== 'partial') return false;
+    if (activeStatus === 'clear' && st !== 'clear' && st !== 'nowarnings') return false;
+    if (activeStatus === 'issue' && st !== 'issue') return false;
+    // Adjusted pending: "pending" filter = no warnings addressed yet, or sites with no warnings
+    if (activeStatus === 'pending' && st !== 'pending') return false;
+  }
+  return true;
+}
+
+// ── BUILD CARD ──
+function buildCard(siteIdx) {
+  const site = sites[siteIdx];
+  const warnings = getSiteWarnings(site);
+  const status = computeSiteStatus(siteIdx);
+  const sw = state.warnings[siteIdx] || {};
+
+  // Status class
+  let cardClass = '';
+  if (status === 'clear' || status === 'nowarnings') cardClass = 'status-clear';
+  else if (status === 'issue') cardClass = 'status-issue';
+  else if (status === 'partial') cardClass = 'status-partial';
+
+  // Warning badge
+  let badgeHtml = '';
+  if (warnings.length === 0) {
+    badgeHtml = '<span class="warning-badge wbadge-clear">No Warnings</span>';
+  } else {
+    const resolvedCount = warnings.filter(w => sw[w.field] && sw[w.field].status === 'resolved').length;
+    const issueCount = warnings.filter(w => sw[w.field] && sw[w.field].status === 'issue').length;
+    if (status === 'clear') {
+      badgeHtml = '<span class="warning-badge wbadge-clear">All Clear</span>';
+    } else if (status === 'issue') {
+      badgeHtml = `<span class="warning-badge wbadge-issue">${issueCount} issue${issueCount!==1?'s':''}</span>`;
+    } else if (status === 'partial') {
+      const done = resolvedCount + issueCount;
+      badgeHtml = `<span class="warning-badge wbadge-partial">${done}/${warnings.length} done</span>`;
+    } else {
+      badgeHtml = `<span class="warning-badge wbadge-pending">${warnings.length} warning${warnings.length!==1?'s':''}</span>`;
+    }
+  }
+
+  // Warning rows
+  let warningsHtml = '';
+  if (warnings.length === 0) {
+    warningsHtml = '<div class="no-warnings-msg">No outstanding warnings for this site.</div>';
+  } else {
+    warningsHtml = '<div class="warnings-list">';
+    warnings.forEach(wf => {
+      const wState = sw[wf.field] || null;
+      const isResolved = wState && wState.status === 'resolved';
+      const isIssue = wState && wState.status === 'issue';
+      const rowClass = isResolved ? 'wr-resolved' : isIssue ? 'wr-issue' : '';
+      const resolveActive = isResolved ? 'active' : '';
+      const issueActive = isIssue ? 'active' : '';
+      const statusVal = esc(site[wf.field]);
+      const noteVal = (wState && wState.note) ? esc(wState.note) : '';
+      const noteDisplay = isIssue ? '' : 'display:none';
+      warningsHtml += `
+        <div class="warning-row ${rowClass}" id="wr-${siteIdx}-${wf.field}">
+          <div class="warning-row-info">
+            <div class="warning-label">${esc(wf.label)}</div>
+            <div class="warning-status-text">${statusVal}</div>
+            <div class="issue-note-wrap" style="${noteDisplay}" id="note-wrap-${siteIdx}-${wf.field}">
+              <textarea class="issue-note-input" rows="2" placeholder="Describe the issue..."
+                onchange="updateNote(${siteIdx},'${wf.field}',this.value)"
+                onblur="updateNote(${siteIdx},'${wf.field}',this.value)"
+                id="note-input-${siteIdx}-${wf.field}">${noteVal}</textarea>
+            </div>
+          </div>
+          <div class="warning-row-actions">
+            <button class="w-btn w-btn-resolve ${resolveActive}" title="Mark Resolved"
+              onclick="resolveWarning(${siteIdx},'${wf.field}')" aria-label="Mark ${esc(wf.label)} as resolved">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="w-btn w-btn-issue ${issueActive}" title="Log Issue"
+              onclick="issueWarning(${siteIdx},'${wf.field}')" aria-label="Log issue for ${esc(wf.label)}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <button class="w-btn w-btn-reset" title="Reset"
+              onclick="resetWarning(${siteIdx},'${wf.field}')" aria-label="Reset ${esc(wf.label)}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+            </button>
+          </div>
+        </div>`;
+    });
+    warningsHtml += '</div>';
+  }
+
+  // Notes box
+  let notesHtml = '';
+  if (site.notes && site.notes.trim()) {
+    notesHtml = `<div class="site-notes-box"><strong>Spreadsheet Note</strong>${esc(site.notes)}</div>`;
+  }
+
+  return `
+    <div class="site-card ${cardClass}" id="card-${siteIdx}" data-idx="${siteIdx}">
+      <div class="card-header" onclick="toggleCard(${siteIdx})" role="button" aria-expanded="false" aria-controls="body-${siteIdx}">
+        <div class="card-status-bar" aria-hidden="true"></div>
+        <div class="card-header-info">
+          <div class="card-header-top">
+            <span class="scn-badge">${esc(site.scn)}</span>
+            <span class="district-badge ${districtClass(site.district)}">${esc(site.district)}</span>
+          </div>
+          <div class="site-name">${esc(site.site)}</div>
+        </div>
+        ${badgeHtml}
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="card-body" id="body-${siteIdx}">
+        ${warningsHtml}
+        ${notesHtml}
+        <div class="tech-note-section">
+          <div class="tech-note-label">Technician Note</div>
+          <textarea class="tech-note-textarea" id="technote-${siteIdx}"
+            placeholder="Add a note, suggestion, or flag something for later..."
+            oninput="saveTechNote(${siteIdx})">${esc(state.techNotes[siteIdx] || '')}</textarea>
+          <div class="tech-note-saved" id="technote-saved-${siteIdx}">Saved</div>
+        </div>
+        ${site.lat ? `<div class="nav-btn-wrap">
+          <a class="nav-btn" href="https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lon}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Navigate to Site
+          </a>
+        </div>` : ''}
+        <div class="last-updated">Data last updated: ${esc(site.lastUpdate)}</div>
+      </div>
+    </div>`;
+}
+
+// ── RENDER CARDS ──
+function renderCards() {
+  const container = document.getElementById('cardsList');
+  const countEl = document.getElementById('siteCount');
+  let html = '';
+  let count = 0;
+  sites.forEach((site, idx) => {
+    if (!matchesFilters(idx)) return;
+    html += buildCard(idx);
+    count++;
+  });
+  if (!html) {
+    html = '<div class="no-sites-msg">No sites match the current filters.</div>';
+  }
+  container.innerHTML = html;
+  countEl.textContent = `Showing ${count} of ${sites.length} sites`;
+  renderProgress();
+}
+
+// ── UPDATE SINGLE CARD ──
+function updateCard(siteIdx) {
+  const existing = document.getElementById(`card-${siteIdx}`);
+  if (!existing) return; // not visible
+  const wasOpen = existing.querySelector('.card-body.open') !== null;
+  const newHtml = buildCard(siteIdx);
+  const temp = document.createElement('div');
+  temp.innerHTML = newHtml;
+  const newCard = temp.firstElementChild;
+  existing.replaceWith(newCard);
+  if (wasOpen) {
+    const body = newCard.querySelector('.card-body');
+    const header = newCard.querySelector('.card-header');
+    const chevron = newCard.querySelector('.chevron');
+    if (body) body.classList.add('open');
+    if (header) header.setAttribute('aria-expanded','true');
+    if (chevron) chevron.classList.add('open');
+  }
+  renderProgress();
+}
+
+// ── TOGGLE CARD ──
+function toggleCard(siteIdx) {
+  const body = document.getElementById(`body-${siteIdx}`);
+  const header = body.previousElementSibling;
+  const chevron = header.querySelector('.chevron');
+  const open = body.classList.toggle('open');
+  header.setAttribute('aria-expanded', open ? 'true' : 'false');
+  chevron.classList.toggle('open', open);
+}
+
+// ── WARNING ACTIONS ──
+function resolveWarning(siteIdx, field) {
+  const ws = state.warnings[siteIdx] && state.warnings[siteIdx][field];
+  if (ws && ws.status === 'resolved') {
+    // Toggle off
+    clearWarningState(siteIdx, field);
+  } else {
+    setWarningState(siteIdx, field, 'resolved', '');
+  }
+  updateCard(siteIdx);
+  updateFilterIfNeeded();
+}
+
+function issueWarning(siteIdx, field) {
+  const ws = state.warnings[siteIdx] && state.warnings[siteIdx][field];
+  if (ws && ws.status === 'issue') {
+    // Toggle off
+    clearWarningState(siteIdx, field);
+    updateCard(siteIdx);
+  } else {
+    const existingNote = (ws && ws.note) ? ws.note : '';
+    setWarningState(siteIdx, field, 'issue', existingNote);
+    updateCard(siteIdx);
+    // Focus note input
+    setTimeout(() => {
+      const ni = document.getElementById(`note-input-${siteIdx}-${field}`);
+      if (ni) ni.focus();
+    }, 50);
+  }
+  updateFilterIfNeeded();
+}
+
+function resetWarning(siteIdx, field) {
+  clearWarningState(siteIdx, field);
+  updateCard(siteIdx);
+  updateFilterIfNeeded();
+}
+
+function updateNote(siteIdx, field, value) {
+  const ws = state.warnings[siteIdx] && state.warnings[siteIdx][field];
+  if (ws && ws.status === 'issue') {
+    ws.note = value;
+    saveState();
+  }
+}
+
+let techNoteSaveTimers = {};
+function saveTechNote(siteIdx) {
+  clearTimeout(techNoteSaveTimers[siteIdx]);
+  techNoteSaveTimers[siteIdx] = setTimeout(() => {
+    const ta = document.getElementById('technote-' + siteIdx);
+    if (!ta) return;
+    const val = ta.value.trim();
+    if (val) {
+      state.techNotes[siteIdx] = val;
+    } else {
+      delete state.techNotes[siteIdx];
+    }
+    saveState();
+    const saved = document.getElementById('technote-saved-' + siteIdx);
+    if (saved) {
+      saved.classList.add('visible');
+      setTimeout(() => saved.classList.remove('visible'), 1500);
+    }
+  }, 400);
+}
+
+function updateFilterIfNeeded() {
+  if (activeStatus !== 'all') renderCards();
+  renderProgress();
+}
+
+// ── FILTER SETTERS ──
+function setDistrictFilter(val, btn) {
+  activeDistrict = val;
+  document.querySelectorAll('.filter-group:first-child .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function setStatusFilter(val, btn) {
+  activeStatus = val;
+  document.querySelectorAll('.filter-group:last-child .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+// ── MODALS ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── REPORT ──
+function openReportModal() {
+  const tech = state.techName || 'Unknown';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const { total, resolved, issues, pending } = computeTotals();
+
+  let report = '';
+  report += '═'.repeat(60) + '\n';
+  report += '  UTMC ONLINE SITES — WARNING REPORT\n';
+  report += '  Outstanding Checks & Updates\n';
+  report += '═'.repeat(60) + '\n';
+  report += `  Technician : ${tech}\n`;
+  report += `  Date       : ${dateStr}\n`;
+  report += `  Time       : ${timeStr}\n`;
+  report += '─'.repeat(60) + '\n\n';
+
+  // Group by district
+  const districts = ['Newcastle','North Tyneside','Gateshead','South Tyneside','Sunderland','Northumberland'];
+  districts.forEach(district => {
+    const districtSites = sites.map((s,i) => ({s,i})).filter(({s}) => s.district === district);
+    if (districtSites.length === 0) return;
+    report += `▌ ${district.toUpperCase()}\n`;
+    report += '─'.repeat(60) + '\n';
+    districtSites.forEach(({s, i}) => {
+      const warnings = getSiteWarnings(s);
+      if (warnings.length === 0) return;
+      const sw = state.warnings[i] || {};
+      report += `  ${s.scn}  ${s.site}\n`;
+      warnings.forEach(wf => {
+        const wst = sw[wf.field];
+        let statusStr = '[PENDING]';
+        if (wst) {
+          statusStr = wst.status === 'resolved' ? '[RESOLVED]' : `[ISSUE]`;
+        }
+        report += `    • ${wf.label.padEnd(24)} ${statusStr}`;
+        if (wst && wst.status === 'issue' && wst.note) {
+          report += `\n      Note: ${wst.note}`;
+        }
+        report += '\n';
+      });
+      if (s.notes && s.notes.trim()) {
+        report += `    ! Spreadsheet note: ${s.notes}\n`;
+      }
+      if (state.techNotes[i] && state.techNotes[i].trim()) {
+        report += `    >> Tech note: ${state.techNotes[i]}\n`;
+      }
+      report += '\n';
+    });
+  });
+
+  report += '═'.repeat(60) + '\n';
+  report += '  SUMMARY\n';
+  report += '─'.repeat(60) + '\n';
+  report += `  Total Warnings : ${total}\n`;
+  report += `  Resolved       : ${resolved}\n`;
+  report += `  Issues Logged  : ${issues}\n`;
+  report += `  Pending        : ${pending}\n`;
+  report += '═'.repeat(60) + '\n';
+
+  document.getElementById('reportText').textContent = report;
+  openModal('reportModal');
+}
+
+function downloadReport() {
+  const tech = (state.techName || 'Technician').replace(/[^a-zA-Z0-9]/g,'_');
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const text = document.getElementById('reportText').textContent;
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `UTMC_Online_Warnings_${tech}_${dateStr}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function downloadCSV() {
+  const csvEsc = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const headers = ['SCN','Site','District',
+    'Signal Detection (Spreadsheet)','Signal Detection (Status)','Signal Detection (Note)',
+    '5G Antennas (Spreadsheet)','5G Antennas (Status)','5G Antennas (Note)',
+    'Licence/Firmware (Spreadsheet)','Licence/Firmware (Status)','Licence/Firmware (Note)',
+    'MOVA Online (Spreadsheet)','MOVA Online (Status)','MOVA Online (Note)',
+    'IC4 Update (Spreadsheet)','IC4 Update (Status)','IC4 Update (Note)',
+    'Controller Install (Spreadsheet)','Controller Install (Status)','Controller Install (Note)',
+    'ANPR/Smart Detection (Spreadsheet)','ANPR/Smart Detection (Status)','ANPR/Smart Detection (Note)',
+    'Spreadsheet Notes','Technician Note','Last Updated','Technician'];
+  const rows = [headers.join(',')];
+  const techName = state.techName || '';
+  const allFields = [
+    {field:'signalDetection', exclude:['N/A','INSTALLED']},
+    {field:'antennas', exclude:['N/A','INSTALLED']},
+    {field:'firmware', exclude:['N/A','INSTALLED']},
+    {field:'mova', exclude:['N/A']},
+    {field:'ic4', exclude:['N/A']},
+    {field:'controllerInstall', exclude:['INSTALLED']},
+    {field:'anpr', exclude:['N/A','INSTALLED']}
+  ];
+  sites.forEach((s, idx) => {
+    const sw = state.warnings[idx] || {};
+    const cols = [csvEsc(s.scn), csvEsc(s.site), csvEsc(s.district)];
+    allFields.forEach(af => {
+      const val = s[af.field] || '';
+      const isWarning = !af.exclude.includes(val);
+      let status = '';
+      let note = '';
+      if (isWarning) {
+        const ws = sw[af.field];
+        status = ws ? (ws.status === 'resolved' ? 'Resolved' : 'Issue') : 'Pending';
+        note = ws && ws.note ? ws.note : '';
+      }
+      cols.push(csvEsc(val), csvEsc(status), csvEsc(note));
+    });
+    cols.push(csvEsc(s.notes || ''));
+    cols.push(csvEsc(state.techNotes[idx] || ''));
+    cols.push(csvEsc(s.lastUpdate || ''));
+    cols.push(csvEsc(techName));
+    rows.push(cols.join(','));
+  });
+  const blob = new Blob(['\uFEFF' + rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  const techFile = (state.techName || 'Technician').replace(/[^a-zA-Z0-9]/g,'_');
+  const dateStr = new Date().toISOString().slice(0,10);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `UTMC_Online_Warnings_${techFile}_${dateStr}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── CLEAR ──
+function openClearModal() { openModal('clearModal'); }
+
+function clearAllData() {
+  state = { techName: '', warnings: {}, techNotes: {} };
+  saveState();
+  document.getElementById('techName').value = '';
+  closeModal('clearModal');
+  renderCards();
+}
+
+// ── DATE ──
+function setDate() {
+  const now = new Date();
+  const d = now.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  document.getElementById('dateBadge').textContent = d;
+}
+
+// ── TECH NAME ──
+document.getElementById('techName').addEventListener('input', function() {
+  state.techName = this.value;
+  saveState();
+});
+
+// ── INIT ──
+loadState();
+setDate();
+document.getElementById('techName').value = state.techName || '';
+renderCards();
+</script>
+</body>
+</html>
