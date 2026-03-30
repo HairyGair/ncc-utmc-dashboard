@@ -69,6 +69,12 @@ function validate_enum(string $value, array $allowed, string $field): void
     }
 }
 
+function to_mysql_datetime(string $iso): string
+{
+    $dt = new DateTimeImmutable($iso);
+    return $dt->format('Y-m-d H:i:s');
+}
+
 // ---------------------------------------------------------------------------
 // Routing
 // ---------------------------------------------------------------------------
@@ -172,7 +178,7 @@ function handle_warnings(string $method): void
                     ':status'      => (string) $body['status'],
                     ':note'        => isset($body['note']) ? (string) $body['note'] : null,
                     ':tech_name'   => isset($body['techName']) ? (string) $body['techName'] : null,
-                    ':recorded_at' => (string) $body['timestamp'],
+                    ':recorded_at' => to_mysql_datetime((string) $body['timestamp']),
                 ]);
 
                 json_success();
@@ -283,7 +289,7 @@ function handle_installations(string $method): void
                     ':type'        => (string) $body['type'],
                     ':note'        => isset($body['note']) ? (string) $body['note'] : null,
                     ':tech_name'   => isset($body['techName']) ? (string) $body['techName'] : null,
-                    ':recorded_at' => (string) $body['timestamp'],
+                    ':recorded_at' => to_mysql_datetime((string) $body['timestamp']),
                 ]);
 
                 json_success();
@@ -366,7 +372,7 @@ function handle_visits(string $method): void
                     ':type'        => (string) $body['type'],
                     ':note'        => isset($body['note']) ? (string) $body['note'] : null,
                     ':tech_name'   => isset($body['techName']) ? (string) $body['techName'] : null,
-                    ':recorded_at' => (string) $body['timestamp'],
+                    ':recorded_at' => to_mysql_datetime((string) $body['timestamp']),
                 ]);
 
                 json_success();
