@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/auth.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>UTMC Site Visit Report — Offline Sites</title>
+<title>UTMC Router Installation Tracker</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -540,49 +541,28 @@
     grid-column: 1 / -1;
   }
 
+  /* ── NAV BUTTON ── */
+  .nav-btn-wrap { padding: 0 16px 14px; }
+  .nav-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px 10px; border-radius: var(--radius-sm);
+    border: 2px solid var(--accent); background: var(--accent-light);
+    color: var(--accent); font-size: 15px; font-weight: 700;
+    font-family: inherit; cursor: pointer; min-height: 52px;
+    -webkit-tap-highlight-color: transparent; transition: all 0.15s ease;
+    text-decoration: none;
+  }
+  .nav-btn:hover, .nav-btn:active {
+    background: var(--accent); color: white;
+    box-shadow: 0 4px 12px rgba(46,125,204,0.3);
+  }
+  .nav-btn svg { width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
+
   /* ── ACTION AREA ── */
   .action-area {
     padding: 14px 16px 16px;
     border-top: 1px solid var(--border);
     background: #FAFBFC;
-  }
-
-  .nav-btn-wrap {
-    padding: 0 16px 14px;
-  }
-
-  .nav-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px 10px;
-    border-radius: var(--radius-sm);
-    border: 2px solid var(--accent);
-    background: var(--accent-light);
-    color: var(--accent);
-    font-size: 15px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    min-height: 52px;
-    -webkit-tap-highlight-color: transparent;
-    transition: all 0.15s ease;
-    text-decoration: none;
-  }
-
-  .nav-btn:hover, .nav-btn:active {
-    background: var(--accent);
-    color: white;
-    box-shadow: 0 4px 12px rgba(46,125,204,0.3);
-  }
-
-  .nav-btn svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
-    flex-shrink: 0;
   }
 
   .action-label {
@@ -884,8 +864,8 @@
     <div class="header-brand">
       <div class="ncc-badge"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALUAAAAuCAYAAABu8lgpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYxIDY0LjE0MDk0OSwgMjAxMC8xMi8wNy0xMDo1NzowMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNS4xIFdpbmRvd3MiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NEFBNDE4QTkyNEZBMTFFM0I2RUE5MjBDM0FDRkMwRDQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NEFBNDE4QUEyNEZBMTFFM0I2RUE5MjBDM0FDRkMwRDQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0QUE0MThBNzI0RkExMUUzQjZFQTkyMEMzQUNGQzBENCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0QUE0MThBODI0RkExMUUzQjZFQTkyMEMzQUNGQzBENCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PrTDFrkAACSMSURBVHja7J0LuFVz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" alt="Newcastle City Council"></div>
       <div class="header-title">
-        <h1>UTMC Site Visit Report — Offline Sites</h1>
-        <p>Router Installation &amp; Firmware Updates</p>
+        <h1>UTMC Router Installation Tracker</h1>
+        <p>Sites Pending Router Installation</p>
       </div>
     </div>
   </div>
@@ -900,11 +880,11 @@
   <!-- Progress bar -->
   <div class="progress-bar-section">
     <div class="progress-stats">
-      <span class="progress-label" id="progressLabel">0 of 42 sites completed</span>
+      <span class="progress-label" id="progressLabel">0 of 119 sites completed</span>
       <div class="progress-counts">
-        <span class="count-online" id="countOnline">0 Online</span>
+        <span class="count-online" id="countOnline">0 Installed</span>
         <span class="count-issue"  id="countIssue">0 Issues</span>
-        <span class="count-pending" id="countPending">42 Pending</span>
+        <span class="count-pending" id="countPending">119 Pending</span>
       </div>
     </div>
     <div class="progress-track">
@@ -918,7 +898,7 @@
 <div class="filters-bar" id="filtersBar">
   <div class="filter-group" id="districtFilters">
     <span class="filter-group-label">District</span>
-    <button class="filter-pill active" data-filter-type="district" data-filter-value="All">All <span class="pill-count" id="cnt-dist-All">42</span></button>
+    <button class="filter-pill active" data-filter-type="district" data-filter-value="All">All <span class="pill-count" id="cnt-dist-All">119</span></button>
     <button class="filter-pill" data-filter-type="district" data-filter-value="Newcastle">Newcastle <span class="pill-count" id="cnt-dist-Newcastle">0</span></button>
     <button class="filter-pill" data-filter-type="district" data-filter-value="North Tyneside">N. Tyneside <span class="pill-count" id="cnt-dist-NorthTyneside">0</span></button>
     <button class="filter-pill" data-filter-type="district" data-filter-value="Gateshead">Gateshead <span class="pill-count" id="cnt-dist-Gateshead">0</span></button>
@@ -930,7 +910,7 @@
     <span class="filter-group-label">Status</span>
     <button class="filter-pill active" data-filter-type="status" data-filter-value="All">All</button>
     <button class="filter-pill" data-filter-type="status" data-filter-value="pending">Pending</button>
-    <button class="filter-pill" data-filter-type="status" data-filter-value="online">Online</button>
+    <button class="filter-pill" data-filter-type="status" data-filter-value="online">Installed</button>
     <button class="filter-pill" data-filter-type="status" data-filter-value="issue">Issues</button>
   </div>
 </div>
@@ -960,7 +940,7 @@
 <!-- ═══ REPORT MODAL ═══ -->
 <div class="modal-overlay" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
   <div class="modal">
-    <h2 id="reportModalTitle">&#128196; Site Visit Report</h2>
+    <h2 id="reportModalTitle">&#128196; Installation Report</h2>
     <div class="modal-body" id="reportInfo"></div>
     <textarea class="report-textarea" id="reportText" readonly></textarea>
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:space-between;">
@@ -996,57 +976,134 @@
    SITE DATA
 ══════════════════════════════════════════ */
 const sites = [
-  {scn:"X19110",site:"0019 A1058 Stephenson Rd / Heaton Rd",district:"Newcastle",router:"INSTALL FROM DEPOT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.991153,lon:-1.583706},
-  {scn:"X16230",site:"0050 A186 West Rd / Turret Rd",district:"Newcastle",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"INSTALL",firmware:"N/A",notes:"Router failed",lastUpdate:"2026-02-02",lat:54.984181,lon:-1.69072},
-  {scn:"X10260",site:"0269 Hunter's Rd / Belle Gr W",district:"Newcastle",router:"INSTALLED",controllerIP:"INSTALL",firmware:"N/A",notes:"Believe the controller was updated but IP details and router connection not inputted into it",lastUpdate:"2026-01-21",lat:54.98348,lon:-1.631137},
-  {scn:"X14130",site:"0342 B1600 Quayside / Tyne Brg",district:"Newcastle",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"N/A",notes:"Switched off for Tyne Bridge works",lastUpdate:"2026-01-15",lat:54.968441,lon:-1.60694},
-  {scn:"X16330",site:"0352 A695 Scotswood Rd / Refuse Access",district:"Newcastle",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"WRONG LICENCE CARD",notes:"Wrong licence card installed, doesn't enable UTC facility only MOVA. Waiting for technician to sort. WMS ref 66737102",lastUpdate:"2025-05-21",lat:54.965811,lon:-1.667765},
-  {scn:"X06420",site:"0424 Claremont Rd / Queen Victoria Rd",district:"Newcastle",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:54.981004,lon:-1.616820},
-  {scn:"X18340",site:"0509 A187 Fossway / Scrogg Rd",district:"Newcastle",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"UPDATE",notes:"",lastUpdate:"2025-08-06",lat:54.98186,lon:-1.558201},
-  {scn:"X09120",site:"1002 B1318 Grt North Rd / Polwarth Dr",district:"Newcastle",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:55.023354,lon:-1.621968},
-  {scn:"X09140",site:"1019 B1318 Grt North Rd / Newlands Ave",district:"Newcastle",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:55.026136,lon:-1.621921},
-  {scn:"X13120",site:"1428 Kingston Pk Rd / Fawdon Ln",district:"Newcastle",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:55.019142,lon:-1.645418},
-  {scn:"X91270",site:"2896 A186 Station Rd / Hotspur Rd",district:"North Tyneside",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:55.007829,lon:-1.547745},
-  {scn:"X90130",site:"3268 A191 Whitley Rd / B1317 Station Rd",district:"North Tyneside",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"UPDATE",notes:"Router ok but controller offline - this is the 4th time the licence is not working on controller, it has version 28 firmware that needs updating. Callum also has changed IC4 back????",lastUpdate:"2026-02-13",lat:55.011203,lon:-1.566022},
-  {scn:"X03110",site:"4050 A184 Charles St & Park Ln / High St",district:"Gateshead",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"UPDATE",notes:"Router failed, power lead damaged",lastUpdate:"2026-01-22",lat:54.961501,lon:-1.600361},
-  {scn:"X22120",site:"4129 A1231 Sunderland Hwy / B1288",district:"Gateshead",router:"INSTALLED",controllerIP:"UPDATE",firmware:"N/A",notes:"Controller IP details incl netmask wrong",lastUpdate:"2025-08-14",lat:54.906807,lon:-1.559087},
-  {scn:"X26150",site:"4141 B1426 Sunderland Rd / Felling Metro Stn",district:"Gateshead",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2026-02-02",lat:54.952666,lon:-1.571248},
-  {scn:"X22170",site:"4164 A167 Durham Rd / Birtley Supermkt",district:"Gateshead",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"UPDATE",notes:"Router failed",lastUpdate:"2026-01-14",lat:54.894506,lon:-1.577669},
-  {scn:"X20220",site:"4186 B1426 Lobley Hill Rd / Queensway N",district:"Gateshead",router:"INSTALLED",controllerIP:"UPDATE",firmware:"UPDATE",notes:"Router OK, controller interface will not load remotely, firmware/licence update reqd?",lastUpdate:"2025-08-06",lat:54.946311,lon:-1.625184},
-  {scn:"X22190",site:"4187 A167 Newcastle Bk / NCN 725",district:"Gateshead",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"N/A",notes:"Router installed, requires antennas installing and fitting to it",lastUpdate:"2025-09-25",lat:54.909102,lon:-1.582093},
-  {scn:"X40130",site:"6858 A194 Leam Ln / B1306 Mill Ln",district:"South Tyneside",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-12-04",lat:54.952194,lon:-1.50606},
-  {scn:"X40220",site:"6863 Hedworth Ln / Fellgate Ave",district:"South Tyneside",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:54.956341,lon:-1.476098},
-  {scn:"X42210",site:"6876 Downhill Ln / BCOL 63 Bridleway",district:"South Tyneside",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-12-04",lat:54.933244,lon:-1.46573},
-  {scn:"X62110",site:"8044 A690 New Durham Rd / Tunstall Tce W",district:"Sunderland",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"UPDATE",notes:"Router OK, controller interface will not load remotely, firmware/licence update reqd?",lastUpdate:"2026-01-20",lat:54.902647,lon:-1.390063},
-  {scn:"X56270",site:"8068 John St / Athenaeum St",district:"Sunderland",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:54.905447,lon:-1.380234},
-  {scn:"X62180",site:"8089 A690 Durham Rd / Grindon Ln",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2026-01-14",lat:54.885036,lon:-1.422277},
-  {scn:"X53250",site:"8113 A183 Whitburn Rd / Amusements",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2026-01-15",lat:54.936589,lon:-1.368714},
-  {scn:"X61220",site:"8114 A183 Chester Rd / University Gateway Bldg",district:"Sunderland",router:"INSTALLED",controllerIP:"INSTALLED",firmware:"N/A",notes:"No power",lastUpdate:"2025-08-13",lat:54.904092,lon:-1.390564},
-  {scn:"X50130",site:"8117 A1231 St. Michael's Way / A690 New Durham Rd",district:"Sunderland",router:"RETAIN & INSTALL",controllerIP:"INSTALL",firmware:"INSTALL",notes:"Existing router failed",lastUpdate:"2025-12-08",lat:54.902823,lon:-1.388962},
-  {scn:"X57120",site:"8118 A1290 Washington Rd / Nissan",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.922977,lon:-1.474321},
-  {scn:"X62120",site:"8137 A690 Burn Park Rd / Elmwood St",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-12-04",lat:54.901164,lon:-1.395596},
-  {scn:"X63130",site:"8144 Hylton Rd / John Candish Rd",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2026-01-15",lat:54.905994,lon:-1.404741},
-  {scn:"X64110",site:"8149 A183 Chester Rd / A182 Philadelphia Ln",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-12-04",lat:54.868498,lon:-1.495085},
-  {scn:"X61110",site:"8186 A183 The Broadway / Grindon Ln",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.893361,lon:-1.435865},
-  {scn:"X61120",site:"8187 A183 Chester Rd / Grindon Ct",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.892903,lon:-1.437877},
-  {scn:"X60210",site:"8193 A1231 Trimdon St / Rose St",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-10-13",lat:54.907974,lon:-1.394301},
-  {scn:"X62160",site:"8613AB A690 Durham Rd / Ettrick Gr",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2026-01-15",lat:54.890357,lon:-1.412799},
-  {scn:"X67160",site:"8622 B1286 Doxford Park Way / William Doxford Ctr",district:"Sunderland",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:54.865591,lon:-1.416317},
-  {scn:"X62210",site:"8627 A690 Durham Rd / Charter Dr",district:"Sunderland",router:"COLLECT FROM UTMC & INSTALL",controllerIP:"UPDATE",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-12-04",lat:54.872267,lon:-1.441073},
-  {scn:"X66130",site:"9642 The Galleries / Market Village",district:"Sunderland",router:"NEW ROUTER TO BE BUILT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-12-08",lat:54.901292,lon:-1.530308},
-  {scn:"X57180",site:"9651 A1290 Washington Rd / International Dr (S)",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.921368,lon:-1.478099},
-  {scn:"X57130",site:"9653 A1290 Washington Rd / Follingsby Ln Bridleway",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"INSTALL",firmware:"N/A",notes:"Router failed",lastUpdate:"2025-10-13",lat:54.925542,lon:-1.472736},
-  {scn:"X57170",site:"9654 International Dr / Downhill Ln",district:"Sunderland",router:"INSTALL FROM DEPOT",controllerIP:"INSTALL",firmware:"N/A",notes:"",lastUpdate:"2025-10-13",lat:54.928547,lon:-1.471657},
-  {scn:"X85240",site:"BV02 B1328 Bridge St / B1327 Union St",district:"Northumberland",router:"INSTALLED",controllerIP:"UPDATE",firmware:"UPDATE",notes:"Router OK, controller offline - licence network config maybe wrong",lastUpdate:"2025-12-04",lat:55.127181,lon:-1.50776}
+  {id:0,  scn:"X07211",site:"0012 Pilgrim St / Blackett St",district:"Newcastle",notes:"",lat:54.97423230618864,lon:-1.611742915602861},
+  {id:1,  scn:"X10240",site:"0027 A189 Barrack Rd / Brighton Gr",district:"Newcastle",notes:"",lat:54.98151594062887,lon:-1.636025915214916},
+  {id:2,  scn:"X10210",site:"0038 A189 Barrack Rd / Stanhope St",district:"Newcastle",notes:"",lat:54.97578724888793,lon:-1.62674044446193},
+  {id:3,  scn:"TBC",   site:"0094 A186 Walker Rd / Glasshouse St",district:"Newcastle",notes:"",lat:54.96887241015757,lon:-1.5772329055354792},
+  {id:4,  scn:"X16280",site:"0103 A695 Scotswood Rd / Park Rd",district:"Newcastle",notes:"",lat:54.96328462345389,lon:-1.634745756945421},
+  {id:5,  scn:"X10220",site:"0121 A189 Barrack Rd / New Mills",district:"Newcastle",notes:"",lat:54.9775399725804,lon:-1.628971976388442},
+  {id:6,  scn:"TBC",   site:"0124 A186 Westgate Rd / Wingrove Rd",district:"Newcastle",notes:"",lat:54.974726,lon:-1.648188},
+  {id:7,  scn:"X16310",site:"0129 A695 Scotswood Rd / William Armstrong Dr (W)",district:"Newcastle",notes:"",lat:54.96457299894162,lon:-1.656465217513983},
+  {id:8,  scn:"X16360",site:"0130 A695 Scotswood Rd / Armstrong Wks",district:"Newcastle",notes:"",lat:54.96758172411054,lon:-1.684419905574293},
+  {id:9,  scn:"X14220",site:"0133 A186 City Rd / Horatio St",district:"Newcastle",notes:"",lat:54.971717,lon:-1.59033},
+  {id:10, scn:"X10180",site:"0172 A189 Barrack Rd / Strawberry Pl",district:"Newcastle",notes:"",lat:54.97406761601998,lon:-1.622152486913561},
+  {id:11, scn:"X16420",site:"0176 B1311 Elswick Rd / Grainger Pk Rd",district:"Newcastle",notes:"",lat:54.968957,lon:-1.648997},
+  {id:12, scn:"X14210",site:"0194 A186 City Rd / B1312 Cut Bk",district:"Newcastle",notes:"",lat:54.972148,lon:-1.591828},
+  {id:13, scn:"X16260",site:"0242 A695 Scotswood Rd / A695 Plummer St (W)",district:"Newcastle",notes:"",lat:54.96472156165569,lon:-1.627173642712193},
+  {id:14, scn:"X16270",site:"0255 A695 Scotswood Rd / Dunn St",district:"Newcastle",notes:"",lat:54.96389471473936,lon:-1.631199767177392},
+  {id:15, scn:"X16380",site:"0256 A6085 Scotswood Rd / DIY Store Access",district:"Newcastle",notes:"",lat:54.97044912889716,lon:-1.695309760219686},
+  {id:16, scn:"X16350",site:"0258 A695 Scotswood Rd / Lookers Garage",district:"Newcastle",notes:"",lat:54.96641589571284,lon:-1.676093693403416},
+  {id:17, scn:"X10250",site:"0276 A189 Grandstand Rd / Fenham Hall Dr",district:"Newcastle",notes:"",lat:54.98457120059847,lon:-1.641138894386089},
+  {id:18, scn:"X10230",site:"0302 A189 Barrack Rd / Holland Dr",district:"Newcastle",notes:"",lat:54.97994701562678,lon:-1.633896772789271},
+  {id:19, scn:"X10190",site:"0303 A189 Barrack Rd / St. James' Pk",district:"Newcastle",notes:"",lat:54.97521069878642,lon:-1.624344215046122},
+  {id:20, scn:"X16340",site:"0340 A695 Scotswood Rd / Stoneacre Garage",district:"Newcastle",notes:"",lat:54.96610199989222,lon:-1.673719567962024},
+  {id:21, scn:"X16290",site:"0341 A695 Scotswood Rd / William Armstrong Dr (E)",district:"Newcastle",notes:"",lat:54.96273844259541,lon:-1.641971447449507},
+  {id:22, scn:"X16320",site:"0347 A695 Scotswood Rd / B1305 Whitehouse Rd",district:"Newcastle",notes:"",lat:54.96543335552329,lon:-1.663788274264547},
+  {id:23, scn:"X10160",site:"0379 A189 St. James' Bvd / Gallowgate",district:"Newcastle",notes:"",lat:54.97355819312425,lon:-1.621333776557941},
+  {id:24, scn:"X07190",site:"0396 Pilgrim St / Bank House",district:"Newcastle",notes:"",lat:54.97194079120817,lon:-1.610167024547599},
+  {id:25, scn:"X07180",site:"0420 Pilgrim St / Worswick St",district:"Newcastle",notes:"",lat:54.972654,lon:-1.610856},
+  {id:26, scn:"X16440",site:"0439 Netherby Dr / Kirkheaton Pl",district:"Newcastle",notes:"",lat:54.98727513937217,lon:-1.668822570432225},
+  {id:27, scn:"X16450",site:"0440 A191 Silver Lonnen / Lanercost Dr",district:"Newcastle",notes:"",lat:54.98629471016255,lon:-1.675353056545001},
+  {id:28, scn:"X16410",site:"0442 Hadrian Rd / Terrace Ln",district:"Newcastle",notes:"",lat:54.97798831808833,lon:-1.64936446959044},
+  {id:29, scn:"X15250",site:"0443 Hillhead Rd / Chapel Grange",district:"Newcastle",notes:"",lat:55.00089448413121,lon:-1.704453879901895},
+  {id:30, scn:"TBC",   site:"0445 A186 Walker Rd / Elstob Pl",district:"Newcastle",notes:"",lat:54.965186,lon:-1.559169},
+  {id:31, scn:"TBC",   site:"0446 B1600 Forth Bks / Pottery Ln",district:"Newcastle",notes:"",lat:54.966215,lon:-1.617567},
+  {id:32, scn:"TBC",   site:"1406 B6324 Stamfordham Rd / Hillhead Rd",district:"Newcastle",notes:"",lat:55.002933,lon:-1.702894},
+  {id:33, scn:"TBC",   site:"1464 North Walbottle Rd / Northumberland Gdns",district:"Newcastle",notes:"",lat:54.999109,lon:-1.728547},
+  {id:34, scn:"X15240",site:"1465 North Walbottle Rd / Nuneaton Way",district:"Newcastle",notes:"",lat:55.004035,lon:-1.722802},
+  {id:35, scn:"X31120",site:"2012 A193 Marden Rd / Park Vw",district:"North Tyneside",notes:"",lat:55.04188455624071,lon:-1.446780726145249},
+  {id:36, scn:"X30150",site:"2039 Middle Engine Ln / Waggonways Route D",district:"North Tyneside",notes:"",lat:55.01154000501212,lon:-1.504019111469674},
+  {id:37, scn:"X31130",site:"2044 Whitley Rd / Victoria Tce",district:"North Tyneside",notes:"",lat:55.04222885641597,lon:-1.444370976478027},
+  {id:38, scn:"X31180",site:"2067 A193 Park Ave / York Rd",district:"North Tyneside",notes:"",lat:55.042978,lon:-1.446622},
+  {id:39, scn:"X31230",site:"2422 A193 Albion Rd / A192 Preston Rd",district:"North Tyneside",notes:"",lat:55.0107032708645,lon:-1.448364560373051},
+  {id:40, scn:"TBC",   site:"2431 A192 Preston Rd / John Spence Sch",district:"North Tyneside",notes:"",lat:55.022,lon:-1.452641},
+  {id:41, scn:"X31220",site:"2433 Grand Pde / Beverley Gdns",district:"North Tyneside",notes:"",lat:55.03050764654309,lon:-1.430843437472234},
+  {id:42, scn:"X31240",site:"2441 A193 Albion Rd & Tynemouth Rd / Stephenson St",district:"North Tyneside",notes:"",lat:55.011651,lon:-1.445281},
+  {id:43, scn:"X91240",site:"2869 A193 Tynemouth Rd / Howdon Ln",district:"North Tyneside",notes:"Site failed, replacement due? ANPR required on Poles 1 and 2 again.",lat:54.99781369160739,lon:-1.494916092105299},
+  {id:44, scn:"X91280",site:"2913 A187 Buddle St / Segedunum",district:"North Tyneside",notes:"",lat:54.98836978385809,lon:-1.531911357495138},
+  {id:45, scn:"X90350",site:"3275 B1505 Station Rd / Harvey Combe",district:"North Tyneside",notes:"",lat:55.03568945669004,lon:-1.580105566612758},
+  {id:46, scn:"X31250",site:"3287 A192 Earsdon Rd / A1148 Monkseaton Dr",district:"North Tyneside",notes:""},
+  {id:47, scn:"X31260",site:"3288 A192 Earsdon Rd / A186 Earsdon Rd",district:"North Tyneside",notes:"",lat:55.04543887090162,lon:-1.494018495556482},
+  {id:48, scn:"X30160",site:"3292 Park Ln / Brenkley Ave",district:"North Tyneside",notes:"",lat:55.03247499464684,lon:-1.503953022115229},
+  {id:49, scn:"TBC",   site:"3306 B1317 Station Rd / Thornhill Rd",district:"North Tyneside",notes:"",lat:55.012926,lon:-1.566748},
+  {id:50, scn:"X90180",site:"3309 A191 Holystone Way / Whitley Rd",district:"North Tyneside",notes:"Router failed",lat:55.0228885563206,lon:-1.533550850130922},
+  {id:51, scn:"X90360",site:"3670 B1505 Front St / Kirklands",district:"North Tyneside",notes:"",lat:55.04401399999999,lon:-1.577927},
+  {id:52, scn:"X03130",site:"4049 B1426 Prince Consort Rd / A184 (WCR)",district:"Gateshead",notes:"",lat:54.95993773754261,lon:-1.605597282234655},
+  {id:53, scn:"X20190",site:"4067 B1426 Bensham Rd / Cuthbert Rd",district:"Gateshead",notes:"",lat:54.95557407433471,lon:-1.613867427008401},
+  {id:54, scn:"X01170",site:"4082 A184 Park Ln/Rd / Albany Rd",district:"Gateshead",notes:"",lat:54.96281644112667,lon:-1.591141217340123},
+  {id:55, scn:"X01250",site:"4105 Hawks Rd / Quarryfield Rd",district:"Gateshead",notes:"",lat:54.96717672120472,lon:-1.597744091885886},
+  {id:56, scn:"TBC",   site:"4137 St. James Rd / Gateshead Stadium Metro Stn",district:"Gateshead",notes:"",lat:54.957756,lon:-1.588899},
+  {id:57, scn:"X05190",site:"4145 A1114 Handy Dr / Cross Ln",district:"Gateshead",notes:"",lat:54.95864511044039,lon:-1.659665130669453},
+  {id:58, scn:"X23190",site:"4147 B1296 Springwell Rd / Fell Dyke Sch",district:"Gateshead",notes:"",lat:54.92655983019113,lon:-1.569001574201493},
+  {id:59, scn:"X20250",site:"4176 Kingsway S / A1 J67 Coalhouse",district:"Gateshead",notes:"",lat:54.92102528541869,lon:-1.612249219453144},
+  {id:60, scn:"X20240",site:"4182 A184 Askew Rd / Former St. Cuthbert's Village",district:"Gateshead",notes:""},
+  {id:61, scn:"X22210",site:"4185 Vigo Ln / Eskdale",district:"Gateshead",notes:"",lat:54.88067608966763,lon:-1.564483545341502},
+  {id:62, scn:"TBC",   site:"4188 Kingsway N / Second Ave",district:"Gateshead",notes:"",lat:54.94027,lon:-1.623856},
+  {id:63, scn:"X23210",site:"4189 A1 J66 (W) / A167 Newcastle Bk",district:"Gateshead",notes:"",lat:54.91140394351964,lon:-1.585662687847379},
+  {id:64, scn:"TBC",   site:"4190 Marconi Way / A1",district:"Gateshead",notes:"",lat:54.957729,lon:-1.675076},
+  {id:65, scn:"X20230",site:"4191 Eastern Ave / Kingsway N & S",district:"Gateshead",notes:"",lat:54.93249476964932,lon:-1.618117433056397},
+  {id:66, scn:"TBC",   site:"4193 A195 Lingey Ln / Bowes Railway Path",district:"Gateshead",notes:"",lat:54.94144,lon:-1.534595},
+  {id:67, scn:"TBC",   site:"5020 B6317 Whickham Hwy / Dunston Bk",district:"Gateshead",notes:"",lat:54.94433,lon:-1.653683},
+  {id:68, scn:"TBC",   site:"5021 B6317 Whickham Hwy / Tanfield Railway Path",district:"Gateshead",notes:"",lat:54.940054,lon:-1.640462},
+  {id:69, scn:"X41590",site:"6018 A1018 Sunderland Rd / B1301 Dean Rd",district:"South Tyneside",notes:"",lat:54.98640069495904,lon:-1.423531370317534},
+  {id:70, scn:"X41660",site:"6070 A183 Coast Rd / Bamburgh Gr",district:"South Tyneside",notes:"",lat:54.98569823297133,lon:-1.396208877483346},
+  {id:71, scn:"X41740",site:"6095 A1300 Prince Edward Rd / East Ave",district:"South Tyneside",notes:"",lat:54.97325645385456,lon:-1.399364488532289},
+  {id:72, scn:"X41710",site:"6096 Mortimer Rd / Cauldwell Ave",district:"South Tyneside",notes:""},
+  {id:73, scn:"X41650",site:"6097 A183 Coast Rd / Cheviot Rd",district:"South Tyneside",notes:"",lat:54.988148,lon:-1.402446},
+  {id:74, scn:"X41670",site:"6098 A183 Coast Rd / Chatton Ave",district:"South Tyneside",notes:"",lat:54.98419475258176,lon:-1.392288544652028},
+  {id:75, scn:"X41680",site:"6099 A183 Coast Rd / Blackberry Hills",district:"South Tyneside",notes:"",lat:54.98277198205938,lon:-1.388825843398557},
+  {id:76, scn:"X41690",site:"6100 A183 Coast Rd / A1300 Redwell Ln",district:"South Tyneside",notes:"",lat:54.97963831092845,lon:-1.382942178702168},
+  {id:77, scn:"X41640",site:"6101 A183 Coast Rd / Trow Quarry Car Pk",district:"South Tyneside",notes:"",lat:54.99061738452949,lon:-1.407896298909047},
+  {id:78, scn:"X41720",site:"6102 Sunderland Rd / Holmfield Ave",district:"South Tyneside",notes:"",lat:54.98103255998873,lon:-1.417121824811749},
+  {id:79, scn:"X40210",site:"6103 B1516 Bede Burn Rd / Field Tce",district:"South Tyneside",notes:"",lat:54.97182632596962,lon:-1.492750128763657},
+  {id:80, scn:"X41730",site:"6104 B1301 Highfield Rd / Cheviot Rd",district:"South Tyneside",notes:""},
+  {id:81, scn:"X41760",site:"6105 B1298 Stanhope Rd / Ashley Rd",district:"South Tyneside",notes:""},
+  {id:82, scn:"X41750",site:"6106 A1018 Westoe Rd / Erskine Rd",district:"South Tyneside",notes:""},
+  {id:83, scn:"X42270",site:"6872 A184 Front St / Mundles Ln",district:"South Tyneside",notes:"",lat:54.94471392451773,lon:-1.431081835462749},
+  {id:84, scn:"X40230",site:"7524 A185 Jarrow Rd & Swinburne St / Tyne Dock Jarrow Slake",district:"South Tyneside",notes:"",lat:54.97801626490739,lon:-1.463946897501643},
+  {id:85, scn:"X51140",site:"8017 Sunderland Rd / Beaumont St",district:"Sunderland",notes:"",lat:54.91986627926201,lon:-1.402776078789075},
+  {id:86, scn:"X51150",site:"8018 Sunderland Rd / Shakespeare St",district:"Sunderland",notes:"",lat:54.91987081100617,lon:-1.401625634487644},
+  {id:87, scn:"X61260",site:"8074 A183 Chester Rd / Greenwood Rd",district:"Sunderland",notes:""},
+  {id:88, scn:"X61250",site:"8083 A183 Chester Rd / Sevenoaks Dr",district:"Sunderland",notes:""},
+  {id:89, scn:"X56160",site:"8152 A1018 West Wear St / William St",district:"Sunderland",notes:"",lat:54.90897750339284,lon:-1.379046664650161},
+  {id:90, scn:"X60250",site:"8199 B1405 European Way / B1405 Paul Watson Way",district:"Sunderland",notes:"",lat:54.91154093127086,lon:-1.428447940999685},
+  {id:91, scn:"X60230",site:"8201 Pallion New Rd / B1539 Queen Alexandra Brg (W)",district:"Sunderland",notes:"",lat:54.91118190297156,lon:-1.406801540394326},
+  {id:92, scn:"X60240",site:"8203 Pallion New Rd / B1539 Queen Alexandra Brg (E)",district:"Sunderland",notes:"",lat:54.91093862950471,lon:-1.404817184163343},
+  {id:93, scn:"TBC",   site:"8207 Burdon Rd / Mowbray Pk",district:"Sunderland",notes:"",lat:54.904409,lon:-1.381191},
+  {id:94, scn:"X67150",site:"8606 Silksworth Tce / Blind Ln",district:"Sunderland",notes:"",lat:54.87286098601084,lon:-1.400396260261218},
+  {id:95, scn:"TBC",   site:"8632 B1286 Burdon Rd / Nettles Ln",district:"Sunderland",notes:"",lat:54.868285,lon:-1.397315},
+  {id:96, scn:"TBC",   site:"8959 B1284 Front St / Black Boy Rd",district:"Sunderland",notes:"",lat:54.839213,lon:-1.494119},
+  {id:97, scn:"X65120",site:"9295 A182 Front St / Park Vw",district:"Sunderland",notes:"",lat:54.82069039849932,lon:-1.452247619769252},
+  {id:98, scn:"X65130",site:"9296 Park Vw / Hetton-Le-Hole Bus Stn",district:"Sunderland",notes:"",lat:54.82046580120718,lon:-1.453395058609246},
+  {id:99, scn:"X85190",site:"BV03 B1328 Waterloo Rd / Thoroton St",district:"Northumberland",notes:"",lat:55.12621020984563,lon:-1.512873162536167},
+  {id:100,scn:"X85210",site:"BV04 B1328 Waterloo Rd / Market Sq",district:"Northumberland",notes:"",lat:55.12663745369015,lon:-1.510601304105691},
+  {id:101,scn:"X85230",site:"BV05 B1328 Bridge St / Havelock St",district:"Northumberland",notes:"",lat:55.12708729692972,lon:-1.508681994856346},
+  {id:102,scn:"X85120",site:"BV07 A193 Cowpen Rd / Maple Cres",district:"Northumberland",notes:"",lat:55.12900440513276,lon:-1.551552991903535},
+  {id:103,scn:"X85110",site:"BV08 A193 Cowpen Rd / Chase Farm Dr",district:"Northumberland",notes:"",lat:55.12795863418429,lon:-1.555150557435823},
+  {id:104,scn:"X85170",site:"BV14 A193 Cowpen Rd / Albion Retail Pk",district:"Northumberland",notes:"",lat:55.12842141173386,lon:-1.520917936779099},
+  {id:105,scn:"X85180",site:"BV16 B1328 Waterloo Rd / Edward St",district:"Northumberland",notes:"",lat:55.12586475727287,lon:-1.515089223078618},
+  {id:106,scn:"X85140",site:"BV17 A193 Cowpen Rd / Sidney Gdns",district:"Northumberland",notes:"",lat:55.12997498977143,lon:-1.546860829700847},
+  {id:107,scn:"X85130",site:"BV18 A193 Cowpen Rd / Coniston Rd",district:"Northumberland",notes:"",lat:55.1299184014817,lon:-1.54925327324807},
+  {id:108,scn:"X84110",site:"BV25 A192 Astley Rd / A190 The Avenue",district:"Northumberland",notes:"",lat:55.07292918080479,lon:-1.525833137597062},
+  {id:109,scn:"X85150",site:"BV34 A193 Cowpen Rd / Briardale Rd",district:"Northumberland",notes:"",lat:55.13051451503298,lon:-1.537258060720575},
+  {id:110,scn:"X85220",site:"BV36 B1328 Waterloo Rd / Regent St",district:"Northumberland",notes:"",lat:55.12693648314487,lon:-1.509250339834764},
+  {id:111,scn:"X85160",site:"BV45 A193 Cowpen Rd / Blyth Supermkt (E)",district:"Northumberland",notes:"",lat:55.13146102246724,lon:-1.524624535721141},
+  {id:112,scn:"X83140",site:"CM01 A192 Bridge End / Hillgate",district:"Northumberland",notes:"",lat:55.16587869597232,lon:-1.686265607686934},
+  {id:113,scn:"X83130",site:"CM02 A192 Bridge St / Sanderson Arcade",district:"Northumberland",notes:"",lat:55.16733263947226,lon:-1.689046382923905},
+  {id:114,scn:"X83120",site:"CM04 A192 Newgate St / Market Pl",district:"Northumberland",notes:"",lat:55.16778638442306,lon:-1.690747866108197},
+  {id:115,scn:"TBC",   site:"TBC The Silverlink N / Quick Silver Way",district:"North Tyneside",notes:"",lat:55.024971,lon:-1.509926},
+  {id:116,scn:"X85250",site:"W08 A1068 Sheepwash Bk & Rd / Sheepwash Brg",district:"Northumberland",notes:"",lat:55.16590232647112,lon:-1.59935089806325},
+  {id:117,scn:"X85260",site:"W20 B1334 North Seaton Rd / Spital Rd",district:"Northumberland",notes:"",lat:55.1779920647939,lon:-1.522045999379259},
+  {id:118,scn:"X84120",site:"W30 Station Rd / Melrose Villas",district:"Northumberland",notes:"",lat:55.13969682816235,lon:-1.569397652888725}
 ];
 
 /* ══════════════════════════════════════════
    STATE
 ══════════════════════════════════════════ */
-const STORAGE_KEY = 'utmc_site_visits_v1';
+const STORAGE_KEY = 'utmc_installations_v1';
 let state = {
   techName: '',
-  outcomes: {}   // keyed by scn: { type: 'online'|'issue', note: string, timestamp: string }
+  outcomes: {}   // keyed by site id: { type: 'online'|'issue', note: string, timestamp: string }
 };
 
 let activeDistrictFilter = 'All';
@@ -1075,7 +1132,7 @@ function saveState() {
 const API_BASE = 'api/index.php';
 
 function apiPost(data) {
-  fetch(API_BASE + '?page=visits', {
+  fetch(API_BASE + '?page=installations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -1084,7 +1141,7 @@ function apiPost(data) {
 
 async function loadFromApi() {
   try {
-    const r = await fetch(API_BASE + '?page=visits');
+    const r = await fetch(API_BASE + '?page=installations');
     const data = await r.json();
     if (data.success) {
       if (data.outcomes) state.outcomes = data.outcomes;
@@ -1142,25 +1199,25 @@ function updateDistrictCounts() {
 ══════════════════════════════════════════ */
 function updateProgress() {
   const total   = sites.length;
-  let online    = 0;
+  let installed = 0;
   let issue     = 0;
 
   sites.forEach(s => {
-    const o = state.outcomes[s.scn];
+    const o = state.outcomes[s.id];
     if (!o) return;
-    if (o.type === 'online') online++;
+    if (o.type === 'online') installed++;
     else if (o.type === 'issue') issue++;
   });
 
-  const pending   = total - online - issue;
-  const completed = online + issue;
+  const pending   = total - installed - issue;
+  const completed = installed + issue;
 
   document.getElementById('progressLabel').textContent = `${completed} of ${total} sites completed`;
-  document.getElementById('countOnline').textContent   = `${online} Online`;
+  document.getElementById('countOnline').textContent   = `${installed} Installed`;
   document.getElementById('countIssue').textContent    = `${issue} Issues`;
   document.getElementById('countPending').textContent  = `${pending} Pending`;
 
-  document.getElementById('progressOnline').style.width = `${(online / total) * 100}%`;
+  document.getElementById('progressOnline').style.width = `${(installed / total) * 100}%`;
   document.getElementById('progressIssue').style.width  = `${(issue / total) * 100}%`;
 }
 
@@ -1170,7 +1227,7 @@ function updateProgress() {
 function getFilteredSites() {
   return sites.filter(s => {
     const distMatch = activeDistrictFilter === 'All' || s.district === activeDistrictFilter;
-    const outcome   = state.outcomes[s.scn];
+    const outcome   = state.outcomes[s.id];
     const statusVal = outcome ? outcome.type : 'pending';
     const statMatch = activeStatusFilter === 'All' || statusVal === activeStatusFilter;
     return distMatch && statMatch;
@@ -1178,31 +1235,18 @@ function getFilteredSites() {
 }
 
 function renderSiteCard(s) {
-  const outcome  = state.outcomes[s.scn];
+  const outcome  = state.outcomes[s.id];
   const statusCls= outcome ? 'status-' + outcome.type : '';
   const chipCls  = outcome ? outcome.type : 'pending';
-  const chipText = outcome ? (outcome.type === 'online' ? 'Online' : 'Issue Logged') : 'Pending';
+  const chipText = outcome ? (outcome.type === 'online' ? 'Installed' : 'Issue Logged') : 'Pending';
 
   const distKey  = districtKey(s.district);
-
-  // Router status highlighting
-  let routerCls = '';
-  if (s.router.includes('COLLECT FROM UTMC') || s.router.includes('NEW ROUTER')) routerCls = 'highlight-warn';
-  if (s.router.includes('RETAIN')) routerCls = 'highlight-warn';
-
-  // IP status
-  let ipCls = '';
-  if (s.controllerIP === 'INSTALL' || s.controllerIP === 'UPDATE') ipCls = 'highlight-warn';
-
-  // Firmware status
-  let fwCls = '';
-  if (s.firmware === 'UPDATE' || s.firmware === 'INSTALL' || s.firmware === 'WRONG LICENCE CARD') fwCls = 'highlight-bad';
 
   // Outcome recorded section
   let outcomeHtml = '';
   if (outcome) {
     const icon   = outcome.type === 'online' ? '&#10003;' : '&#9888;';
-    const title  = outcome.type === 'online' ? 'Marked Online — Task Complete' : 'Issue Logged';
+    const title  = outcome.type === 'online' ? 'Router Installed — Task Complete' : 'Issue Logged';
     const noteEl = outcome.note ? `<div class="outcome-note"><strong>Note:</strong> ${escapeHtml(outcome.note)}</div>` : '';
     outcomeHtml = `
       <div class="outcome-recorded ${outcome.type}">
@@ -1212,7 +1256,7 @@ function renderSiteCard(s) {
           <div class="outcome-time">Recorded: ${formatTimestamp(outcome.timestamp)}</div>
           ${noteEl}
         </div>
-        <button class="edit-btn" onclick="editOutcome('${s.scn}', event)" aria-label="Edit outcome for ${escapeHtml(s.scn)}">Edit</button>
+        <button class="edit-btn" onclick="editOutcome(${s.id}, event)" aria-label="Edit outcome for ${escapeHtml(s.site)}">Edit</button>
       </div>`;
   }
 
@@ -1223,10 +1267,10 @@ function renderSiteCard(s) {
     </div>` : '';
 
   return `
-<article class="site-card ${statusCls}" id="card-${s.scn}" data-scn="${s.scn}" data-district="${escapeHtml(s.district)}" role="article" aria-label="${escapeHtml(s.scn)} ${escapeHtml(s.site)}">
-  <div class="card-header" onclick="toggleCard('${s.scn}')" role="button" tabindex="0"
-       aria-expanded="false" aria-controls="body-${s.scn}" id="header-${s.scn}"
-       onkeydown="if(event.key==='Enter'||event.key===' '){toggleCard('${s.scn}');event.preventDefault()}">
+<article class="site-card ${statusCls}" id="card-${s.id}" data-id="${s.id}" data-district="${escapeHtml(s.district)}" role="article" aria-label="${escapeHtml(s.scn)} ${escapeHtml(s.site)}">
+  <div class="card-header" onclick="toggleCard(${s.id})" role="button" tabindex="0"
+       aria-expanded="false" aria-controls="body-${s.id}" id="header-${s.id}"
+       onkeydown="if(event.key==='Enter'||event.key===' '){toggleCard(${s.id});event.preventDefault()}">
     <div class="card-status-bar" aria-hidden="true"></div>
     <div class="card-header-main">
       <div class="card-top-row">
@@ -1236,28 +1280,16 @@ function renderSiteCard(s) {
       <div class="site-name">${escapeHtml(s.site)}</div>
     </div>
     <div class="card-right">
-      <span class="outcome-chip ${chipCls}" id="chip-${s.scn}">${chipText}</span>
+      <span class="outcome-chip ${chipCls}" id="chip-${s.id}">${chipText}</span>
       <span class="expand-icon" aria-hidden="true">&#8964;</span>
     </div>
   </div>
 
-  <div class="card-body" id="body-${s.scn}" role="region" aria-labelledby="header-${s.scn}">
+  <div class="card-body" id="body-${s.id}" role="region" aria-labelledby="header-${s.id}">
     <div class="card-details">
-      <div class="detail-item">
-        <span class="detail-label">Router Action</span>
-        <span class="detail-value ${routerCls}">${escapeHtml(s.router)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Controller / OTU IP</span>
-        <span class="detail-value ${ipCls}">${escapeHtml(s.controllerIP)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Licence / Firmware</span>
-        <span class="detail-value ${fwCls}">${escapeHtml(s.firmware)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Last Updated</span>
-        <span class="detail-value">${escapeHtml(s.lastUpdate)}</span>
+      <div class="detail-item full-width">
+        <span class="detail-label">District</span>
+        <span class="detail-value">${escapeHtml(s.district)}</span>
       </div>
       ${notesBoxHtml}
     </div>
@@ -1269,33 +1301,33 @@ function renderSiteCard(s) {
       </a>
     </div>` : ''}
 
-    <div class="action-area" id="action-${s.scn}">
+    <div class="action-area" id="action-${s.id}">
       <div class="action-label">Record Outcome</div>
       <div class="action-buttons">
         <button class="action-btn action-btn-online ${outcome && outcome.type === 'online' ? 'selected' : ''}"
-                id="btn-online-${s.scn}"
-                onclick="selectOutcome('${s.scn}', 'online', event)"
+                id="btn-online-${s.id}"
+                onclick="selectOutcome(${s.id}, 'online', event)"
                 aria-pressed="${outcome && outcome.type === 'online' ? 'true' : 'false'}"
-                aria-label="Mark ${escapeHtml(s.scn)} as online">
-          &#10003; Online — Task Complete
+                aria-label="Mark ${escapeHtml(s.site)} as installed">
+          &#10003; Installed
         </button>
         <button class="action-btn action-btn-issue ${outcome && outcome.type === 'issue' ? 'selected' : ''}"
-                id="btn-issue-${s.scn}"
-                onclick="selectOutcome('${s.scn}', 'issue', event)"
+                id="btn-issue-${s.id}"
+                onclick="selectOutcome(${s.id}, 'issue', event)"
                 aria-pressed="${outcome && outcome.type === 'issue' ? 'true' : 'false'}"
-                aria-label="Log issue for ${escapeHtml(s.scn)}">
-          &#9888; Log Issue
+                aria-label="Log issue for ${escapeHtml(s.site)}">
+          &#9888; Issue
         </button>
       </div>
-      <div class="issue-note-wrap ${outcome && outcome.type === 'issue' ? 'visible' : ''}" id="issue-wrap-${s.scn}">
+      <div class="issue-note-wrap ${outcome && outcome.type === 'issue' ? 'visible' : ''}" id="issue-wrap-${s.id}">
         <textarea class="issue-textarea"
-                  id="issue-note-${s.scn}"
+                  id="issue-note-${s.id}"
                   placeholder="Describe the issue — e.g. No access to cabinet, Wrong router model, Power supply fault..."
-                  aria-label="Issue description for ${escapeHtml(s.scn)}">${outcome && outcome.type === 'issue' ? escapeHtml(outcome.note || '') : ''}</textarea>
+                  aria-label="Issue description for ${escapeHtml(s.site)}">${outcome && outcome.type === 'issue' ? escapeHtml(outcome.note || '') : ''}</textarea>
         <button class="save-btn"
-                id="save-btn-${s.scn}"
-                onclick="saveIssue('${s.scn}')"
-                aria-label="Save issue for ${escapeHtml(s.scn)}">
+                id="save-btn-${s.id}"
+                onclick="saveIssue(${s.id})"
+                aria-label="Save issue for ${escapeHtml(s.site)}">
           Save Issue
         </button>
       </div>
@@ -1326,9 +1358,9 @@ function renderAll() {
 /* ══════════════════════════════════════════
    CARD TOGGLE
 ══════════════════════════════════════════ */
-function toggleCard(scn) {
-  const card   = document.getElementById('card-' + scn);
-  const header = document.getElementById('header-' + scn);
+function toggleCard(id) {
+  const card   = document.getElementById('card-' + id);
+  const header = document.getElementById('header-' + id);
   if (!card) return;
   const isExpanded = card.classList.toggle('expanded');
   header.setAttribute('aria-expanded', isExpanded);
@@ -1337,25 +1369,25 @@ function toggleCard(scn) {
 /* ══════════════════════════════════════════
    OUTCOME ACTIONS
 ══════════════════════════════════════════ */
-function selectOutcome(scn, type, event) {
+function selectOutcome(id, type, event) {
   event && event.stopPropagation();
 
-  const onlineBtn  = document.getElementById('btn-online-' + scn);
-  const issueBtn   = document.getElementById('btn-issue-'  + scn);
-  const issueWrap  = document.getElementById('issue-wrap-' + scn);
+  const onlineBtn  = document.getElementById('btn-online-' + id);
+  const issueBtn   = document.getElementById('btn-issue-'  + id);
+  const issueWrap  = document.getElementById('issue-wrap-' + id);
 
   if (type === 'online') {
     // Save immediately
     const ts = new Date().toISOString();
-    state.outcomes[scn] = {
+    state.outcomes[id] = {
       type: 'online',
       note: '',
       timestamp: ts
     };
     saveState();
-    apiPost({ action: 'save', scn, type: 'online', note: '', techName: state.techName, timestamp: ts });
+    apiPost({ action: 'save', siteId: id, type: 'online', note: '', techName: state.techName, timestamp: ts });
     // Update UI without full re-render for performance
-    refreshCardOutcome(scn);
+    refreshCardOutcome(id);
   } else {
     // Show textarea
     onlineBtn && onlineBtn.classList.remove('selected');
@@ -1363,13 +1395,13 @@ function selectOutcome(scn, type, event) {
     issueBtn  && issueBtn.classList.add('selected');
     issueBtn  && issueBtn.setAttribute('aria-pressed', 'true');
     issueWrap && issueWrap.classList.add('visible');
-    const ta = document.getElementById('issue-note-' + scn);
+    const ta = document.getElementById('issue-note-' + id);
     ta && setTimeout(() => ta.focus(), 50);
   }
 }
 
-function saveIssue(scn) {
-  const ta = document.getElementById('issue-note-' + scn);
+function saveIssue(id) {
+  const ta = document.getElementById('issue-note-' + id);
   const note = ta ? ta.value.trim() : '';
 
   if (!note) {
@@ -1381,28 +1413,28 @@ function saveIssue(scn) {
   }
 
   const ts = new Date().toISOString();
-  state.outcomes[scn] = {
+  state.outcomes[id] = {
     type: 'issue',
     note: note,
     timestamp: ts
   };
   saveState();
-  apiPost({ action: 'save', scn, type: 'issue', note, techName: state.techName, timestamp: ts });
-  refreshCardOutcome(scn);
+  apiPost({ action: 'save', siteId: id, type: 'issue', note, techName: state.techName, timestamp: ts });
+  refreshCardOutcome(id);
 }
 
-function editOutcome(scn, event) {
+function editOutcome(id, event) {
   event && event.stopPropagation();
   // Remove the outcome and re-render this card's action area
-  delete state.outcomes[scn];
+  delete state.outcomes[id];
   saveState();
-  apiPost({ action: 'edit', scn });
-  refreshCardOutcome(scn);
+  apiPost({ action: 'edit', siteId: id });
+  refreshCardOutcome(id);
 }
 
-function refreshCardOutcome(scn) {
+function refreshCardOutcome(id) {
   // Find the site data
-  const site = sites.find(s => s.scn === scn);
+  const site = sites.find(s => s.id === id);
   if (!site) return;
 
   // Re-render just this card by re-rendering all (filtered set may change)
@@ -1413,7 +1445,7 @@ function refreshCardOutcome(scn) {
   }
 
   // Surgical update: replace the card HTML
-  const card = document.getElementById('card-' + scn);
+  const card = document.getElementById('card-' + id);
   if (!card) { renderAll(); return; }
 
   const wasExpanded = card.classList.contains('expanded');
@@ -1424,10 +1456,10 @@ function refreshCardOutcome(scn) {
   card.replaceWith(newCard);
 
   if (wasExpanded) {
-    const freshCard = document.getElementById('card-' + scn);
+    const freshCard = document.getElementById('card-' + id);
     if (freshCard) {
       freshCard.classList.add('expanded');
-      const header = document.getElementById('header-' + scn);
+      const header = document.getElementById('header-' + id);
       if (header) header.setAttribute('aria-expanded', 'true');
     }
   }
@@ -1490,14 +1522,14 @@ function openReportModal() {
   const techName = state.techName || '(Not entered)';
   const dateStr  = formatDate(new Date());
 
-  let onlineCount  = 0;
-  let issueCount   = 0;
-  let pendingCount = 0;
+  let installedCount = 0;
+  let issueCount     = 0;
+  let pendingCount   = 0;
 
   let lines = [];
   lines.push('═══════════════════════════════════════════════════════');
-  lines.push('  UTMC SITE VISIT REPORT — OFFLINE SITES');
-  lines.push('  Router Installation & Firmware Updates');
+  lines.push('  UTMC ROUTER INSTALLATION REPORT');
+  lines.push('  Sites Pending Router Installation');
   lines.push('═══════════════════════════════════════════════════════');
   lines.push('');
   lines.push(`  Technician : ${techName}`);
@@ -1519,18 +1551,18 @@ function openReportModal() {
     lines.push(`  ${d.toUpperCase()}`);
     lines.push('───────────────────────────────────────────────────────');
     group.forEach(s => {
-      const o = state.outcomes[s.scn];
-      if (o && o.type === 'online')  onlineCount++;
-      else if (o && o.type === 'issue') issueCount++;
-      else pendingCount++;
+      const o = state.outcomes[s.id];
+      if (o && o.type === 'online')       installedCount++;
+      else if (o && o.type === 'issue')   issueCount++;
+      else                                pendingCount++;
 
-      const status = o ? (o.type === 'online' ? '[ONLINE]' : '[ISSUE] ') : '[PENDING]';
+      const status = o ? (o.type === 'online' ? '[INSTALLED]' : '[ISSUE]    ') : '[PENDING]  ';
       lines.push(`  ${status}  ${s.scn}  ${s.site}`);
       if (o && o.type === 'issue' && o.note) {
-        lines.push(`           Issue: ${o.note}`);
+        lines.push(`             Issue: ${o.note}`);
       }
       if (o) {
-        lines.push(`           Recorded: ${formatTimestamp(o.timestamp)}`);
+        lines.push(`             Recorded: ${formatTimestamp(o.timestamp)}`);
       }
     });
     lines.push('');
@@ -1539,15 +1571,15 @@ function openReportModal() {
   lines.push('═══════════════════════════════════════════════════════');
   lines.push('  SUMMARY');
   lines.push('═══════════════════════════════════════════════════════');
-  lines.push(`  Online (completed) : ${onlineCount}`);
-  lines.push(`  Issues logged      : ${issueCount}`);
-  lines.push(`  Pending            : ${pendingCount}`);
-  lines.push(`  Total              : ${sites.length}`);
+  lines.push(`  Installed (completed) : ${installedCount}`);
+  lines.push(`  Issues logged         : ${issueCount}`);
+  lines.push(`  Pending               : ${pendingCount}`);
+  lines.push(`  Total                 : ${sites.length}`);
   lines.push('═══════════════════════════════════════════════════════');
 
   document.getElementById('reportText').value = lines.join('\n');
   document.getElementById('reportInfo').textContent =
-    `Generated for ${techName} on ${dateStr}. ${onlineCount} online, ${issueCount} issues, ${pendingCount} pending.`;
+    `Generated for ${techName} on ${dateStr}. ${installedCount} installed, ${issueCount} issues, ${pendingCount} pending.`;
   document.getElementById('copySuccess').classList.remove('visible');
   document.getElementById('reportModal').classList.add('visible');
 }
@@ -1571,9 +1603,8 @@ function emailReport() {
   const report = document.getElementById('reportText').value;
   const techName = state.techName || 'Technician';
   const dateStr = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  const subject = encodeURIComponent(`UTMC Site Visit Report — ${techName} — ${dateStr}`);
+  const subject = encodeURIComponent(`UTMC Router Installation Report — ${techName} — ${dateStr}`);
   const body = encodeURIComponent(report);
-  // mailto has a ~2000 char URL limit in some clients; truncate body if needed
   const maxLen = 1800;
   const safeBody = body.length > maxLen ? body.substring(0, maxLen) + encodeURIComponent('\n\n[Report truncated — please request full report via Share or Copy to Clipboard]') : body;
   window.location.href = `mailto:?subject=${subject}&body=${safeBody}`;
@@ -1582,10 +1613,9 @@ function emailReport() {
 function shareReport() {
   const report = document.getElementById('reportText').value;
   const techName = state.techName || 'Technician';
-  const dateStr = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
   if (navigator.share) {
     navigator.share({
-      title: `UTMC Site Visit Report — ${techName}`,
+      title: `UTMC Router Installation Report — ${techName}`,
       text: report,
     }).catch(() => {});
   }
@@ -1595,7 +1625,7 @@ function downloadReport() {
   const report = document.getElementById('reportText').value;
   const techName = (state.techName || 'Technician').replace(/[^a-zA-Z0-9]/g, '_');
   const dateStr = new Date().toISOString().slice(0, 10);
-  const filename = `UTMC_Site_Visit_${techName}_${dateStr}.txt`;
+  const filename = `UTMC_Installation_${techName}_${dateStr}.txt`;
   const blob = new Blob([report], {type: 'text/plain'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1609,21 +1639,21 @@ function downloadReport() {
 
 function downloadCSV() {
   const csvEsc = v => '"' + String(v).replace(/"/g, '""') + '"';
-  const rows = [['SCN','Site','District','Router Action','Controller/OTU IP','Licence/Firmware','Last Updated','Status','Issue Note','Recorded At','Technician'].join(',')];
+  const rows = [['SCN','Site','District','Spreadsheet Notes','Status','Issue Note','Recorded At','Technician'].join(',')];
   const techName = state.techName || '';
   sites.forEach(s => {
-    const o = state.outcomes[s.scn];
-    const status = o ? (o.type === 'online' ? 'Online' : 'Issue') : 'Pending';
+    const o = state.outcomes[s.id];
+    const status = o ? (o.type === 'online' ? 'Installed' : 'Issue') : 'Pending';
     const note = o && o.note ? o.note : '';
-    const ts = o && o.timestamp ? formatTimestamp(o.timestamp) : '';
-    rows.push([csvEsc(s.scn),csvEsc(s.site),csvEsc(s.district),csvEsc(s.router),csvEsc(s.controllerIP),csvEsc(s.firmware),csvEsc(s.lastUpdate),csvEsc(status),csvEsc(note),csvEsc(ts),csvEsc(techName)].join(','));
+    const ts = o && o.timestamp ? new Date(o.timestamp).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    rows.push([csvEsc(s.scn),csvEsc(s.site),csvEsc(s.district),csvEsc(s.notes),csvEsc(status),csvEsc(note),csvEsc(ts),csvEsc(techName)].join(','));
   });
   const blob = new Blob(['\uFEFF' + rows.join('\n')], {type:'text/csv;charset=utf-8'});
   const techFile = (state.techName || 'Technician').replace(/[^a-zA-Z0-9]/g,'_');
   const dateStr = new Date().toISOString().slice(0,10);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `UTMC_Offline_Sites_${techFile}_${dateStr}.csv`;
+  a.download = `UTMC_Installations_${techFile}_${dateStr}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

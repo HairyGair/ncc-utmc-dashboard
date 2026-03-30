@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/auth.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -313,7 +314,7 @@
   <nav class="card-grid" aria-label="Dashboard pages">
 
     <!-- Warning Tracker -->
-    <a href="warnings.html" class="dash-card dash-card--amber" aria-label="Warning Tracker — Online sites with active warnings and alerts">
+    <a href="warnings.php" class="dash-card dash-card--amber" aria-label="Warning Tracker — Online sites with active warnings and alerts">
       <div class="card-header">
         <div class="card-icon" aria-hidden="true">
           <!-- Warning / alert triangle icon -->
@@ -336,7 +337,7 @@
     </a>
 
     <!-- Router Installations -->
-    <a href="router-installations.html" class="dash-card dash-card--accent" aria-label="Router Installations — UTMC router deployment and installation tracking">
+    <a href="router-installations.php" class="dash-card dash-card--accent" aria-label="Router Installations — UTMC router deployment and installation tracking">
       <div class="card-header">
         <div class="card-icon" aria-hidden="true">
           <!-- Network / router icon -->
@@ -361,7 +362,7 @@
     </a>
 
     <!-- Site Visits — Offline -->
-    <a href="site-visits-offline.html" class="dash-card dash-card--red" aria-label="Site Visits Offline — Offline site visit reports and status">
+    <a href="site-visits-offline.php" class="dash-card dash-card--red" aria-label="Site Visits Offline — Offline site visit reports and status">
       <div class="card-header">
         <div class="card-icon" aria-hidden="true">
           <!-- Clipboard / site visit icon -->
