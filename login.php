@@ -226,7 +226,7 @@ $returnUrl = $_GET['return'] ?? '';
   <form class="login-card" method="POST" action="login.php">
     <div class="login-header">
       <h1>UTMC Dashboards</h1>
-      <p>Northumberland County Council</p>
+      <p>Newcastle City Council</p>
     </div>
 
     <?php if ($expired): ?>

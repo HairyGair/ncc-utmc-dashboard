@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>UTMC Dashboards — Northumberland County Council</title>
+<title>UTMC Dashboards — Newcastle City Council</title>
 <style>
   :root {
     --navy: #1B2A4A;
@@ -303,7 +303,7 @@
     </div>
     <div class="header-titles">
       <h1>UTMC Dashboards</h1>
-      <p>Northumberland County Council &mdash; Traffic Signal Monitoring</p>
+      <p>Newcastle City Council &mdash; Traffic Signal Monitoring</p>
     </div>
   </div>
 </header>
@@ -389,7 +389,7 @@
 </main>
 
 <footer class="page-footer" role="contentinfo">
-  Northumberland County Council &mdash; UTMC Traffic Signal Monitoring
+  Newcastle City Council &mdash; UTMC Traffic Signal Monitoring
 </footer>
 
 </body>
