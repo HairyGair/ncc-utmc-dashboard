@@ -82,43 +82,35 @@
     background: var(--white);
   }
   .fault-card:last-child { border-bottom: none; }
-  .fault-card:hover { background: #fafbfd; }
   .fault-card.status-completed { background: var(--green-bg); }
   .fault-card.status-in_progress { background: var(--amber-bg); }
   .fault-card.status-escalated { background: var(--red-bg); }
 
   .fault-top {
     display: flex; align-items: flex-start; justify-content: space-between;
-    gap: 12px; margin-bottom: 10px;
+    gap: 12px; margin-bottom: 8px;
   }
-  .fault-site { font-weight: 600; font-size: 15px; color: var(--text); }
-  .fault-id { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .fault-site { font-weight: 700; font-size: 16px; color: var(--text); }
   .status-pill {
-    display: inline-block; padding: 3px 10px; border-radius: 12px;
-    font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+    display: inline-block; padding: 4px 12px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   }
   .status-pill.pending { background: #E5E7EB; color: #374151; }
   .status-pill.in_progress { background: #FDE68A; color: #92400E; }
   .status-pill.completed { background: #A7F3D0; color: #065F46; }
   .status-pill.escalated { background: #FECACA; color: #991B1B; }
 
-  .fault-body { margin-bottom: 10px; }
-  .fault-section {
-    padding: 10px 14px; border-radius: 6px; margin-bottom: 8px;
-    font-size: 13px; line-height: 1.5;
+  .fault-summary {
+    font-size: 15px; color: var(--text-mid); line-height: 1.5;
+    margin-bottom: 10px;
   }
-  .fault-section:last-child { margin-bottom: 0; }
-  .fault-section-label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.5px; margin-bottom: 4px;
+
+  .fault-notes-display {
+    background: #FFF7ED; border-left: 3px solid #F59E0B; color: #92400E;
+    padding: 10px 14px; border-radius: 6px; margin-bottom: 10px;
+    font-size: 14px; line-height: 1.5;
   }
-  .section-description { background: #F8F9FC; border-left: 3px solid var(--border); color: var(--text-mid); }
-  .section-description .fault-section-label { color: var(--text-light); }
-  .section-tech { background: #EBF5FF; border-left: 3px solid var(--accent); color: #1E40AF; }
-  .section-tech .fault-section-label { color: var(--accent); }
-  .section-notes { background: #FFF7ED; border-left: 3px solid #F59E0B; color: #92400E; }
-  .section-notes .fault-section-label { color: #B45309; }
-  .fault-code { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .fault-notes-display strong { color: #B45309; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 
   .fault-footer {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -127,11 +119,20 @@
     padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px;
     font-size: 13px; background: var(--white); min-width: 150px;
   }
-  .fault-footer .note-btn {
+  .btn-sm {
     padding: 7px 14px; border: 1px solid var(--border); border-radius: 6px;
     font-size: 13px; background: var(--white); cursor: pointer; color: var(--text-mid);
   }
-  .fault-footer .note-btn:hover { background: #f0f2f5; }
+  .btn-sm:hover { background: #f0f2f5; }
+
+  .fault-detail {
+    display: none; margin-top: 10px; padding: 12px 14px;
+    background: #F8F9FC; border-radius: 6px; font-size: 12px;
+    color: var(--text-light); line-height: 1.6;
+  }
+  .fault-detail.visible { display: block; }
+  .fault-detail span { display: block; margin-bottom: 4px; }
+  .fault-detail .detail-label { font-weight: 600; color: var(--text-mid); display: inline; }
 
   .note-input {
     display: none; margin-top: 10px;
@@ -460,6 +461,35 @@ function esc(s) {
   return d.innerHTML;
 }
 
+
+// Clean up raw IMTRAC text into something a technician can read at a glance
+function cleanForTech(info, closeComments) {
+  var text = info || closeComments || '';
+  // Strip IMTRAC boilerplate
+  text = text.replace(/Signal damaged\s*/i, '');
+  text = text.replace(/Signal not operating correctly \(e\.g\. failing to change or out of sequence\)\s*/i, '');
+  text = text.replace(/Please select an option that best describes the problem:\s*/i, '');
+  text = text.replace(/\[Please check notes for rest of description\]\s*/i, '');
+  text = text.replace(/Other\s+/i, '');
+  // Strip LatLon
+  text = text.replace(/LatLon:\S+/g, '');
+  // Strip IMTRAC response category at the end
+  text = text.replace(/\d+\s*Item Traffic Signals\s*\.*/g, '');
+  // Strip police log/collar numbers but keep the fact police reported it
+  text = text.replace(/Police log[\s-]*\S+/gi, '(police reported)');
+  text = text.replace(/Police collar\s*\S+/gi, '');
+  text = text.replace(/log number\s*\S+/gi, '');
+  text = text.replace(/NP-\d+-\d+/g, '');
+  text = text.replace(/collar\s*\d+/gi, '');
+  // Clean up whitespace
+  text = text.replace(/\s+/g, ' ').trim();
+  // If nothing useful left, try close comments
+  if (text.length < 5 && closeComments) {
+    text = closeComments.replace(/\s+/g, ' ').trim();
+  }
+  return text;
+}
+
 function render() {
   const areaFilter = document.getElementById('areaFilter').value;
   const statusFilter = document.getElementById('statusFilter').value;
@@ -519,38 +549,22 @@ function render() {
       
       html += '<div class="fault-card' + statusClass + '" data-uid="' + uid + '">';
 
-      // Top row: site name + status pill
+      // Top: site name + status
       html += '<div class="fault-top">';
-      html += '<div><div class="fault-site">' + esc(f[1]) + '</div>';
-      html += '<div class="fault-id">' + esc(fid) + ' &middot; ' + esc(f[2]) + ' &middot; ' + esc(f[3]) + ' &middot; IMTRAC: ' + esc(f[4]) + '</div></div>';
+      html += '<div class="fault-site">' + esc(f[1]) + '</div>';
       html += '<span class="status-pill ' + o.status + '">' + o.status.replace('_', ' ') + '</span>';
       html += '</div>';
 
-      // Body: full description, tech notes, user notes
-      html += '<div class="fault-body">';
-      if (f[6] || (f[9] && f[9] !== 'See comments')) {
-        html += '<div class="fault-section section-description">';
-        html += '<div class="fault-section-label">Additional Info</div>';
-        if (f[6]) html += '<div>' + esc(f[6]) + '</div>';
-        if (f[9] && f[9] !== 'See comments' && f[9] !== 'None') html += '<div style="margin-top:6px;font-style:italic">Fault description: ' + esc(f[9]) + '</div>';
-        if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<div class="fault-code">Fault code: ' + esc(f[8]) + '</div>';
-        html += '</div>';
-      }
-      if (f[7] && f[7] !== 'None') {
-        html += '<div class="fault-section section-tech">';
-        html += '<div class="fault-section-label">Technician Notes</div>';
-        html += esc(f[7]);
-        html += '</div>';
-      }
-      if (o.notes) {
-        html += '<div class="fault-section section-notes">';
-        html += '<div class="fault-section-label">Your Notes</div>';
-        html += esc(o.notes);
-        html += '</div>';
-      }
-      html += '</div>';
+      // Summary: clean, readable version of what's wrong
+      var summary = cleanForTech(f[6] || '', f[7] || '');
+      if (summary) html += '<div class="fault-summary">' + esc(summary) + '</div>';
 
-      // Footer: actions
+      // Notes (full, prominent)
+      if (o.notes) {
+        html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(o.notes) + '</div>';
+      }
+
+      // Actions row
       html += '<div class="fault-footer">';
       html += '<select data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-action="status">';
       html += '<option value="pending"' + (o.status==='pending'?' selected':'') + '>Pending</option>';
@@ -558,9 +572,23 @@ function render() {
       html += '<option value="completed"' + (o.status==='completed'?' selected':'') + '>Completed</option>';
       html += '<option value="escalated"' + (o.status==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
-      html += '<button class="note-btn" data-uid="'+esc(uid)+'" data-action="toggle-note">' + (o.notes ? 'Edit note' : 'Add note') + '</button>';
+      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-note">' + (o.notes ? 'Edit note' : 'Add note') + '</button>';
+      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-detail">More info</button>';
       html += '</div>';
 
+      // Hidden detail panel (admin info for when you need it)
+      html += '<div class="fault-detail" id="detail-'+esc(uid)+'">';
+      html += '<span><span class="detail-label">Fault ID:</span> ' + esc(fid) + '</span>';
+      html += '<span><span class="detail-label">Area:</span> ' + esc(f[2]) + '</span>';
+      html += '<span><span class="detail-label">Created:</span> ' + esc(f[3]) + '</span>';
+      html += '<span><span class="detail-label">IMTRAC status:</span> ' + esc(f[4]) + '</span>';
+      if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<span><span class="detail-label">Fault code:</span> ' + esc(f[8]) + '</span>';
+      if (f[6]) html += '<span><span class="detail-label">Full additional info:</span> ' + esc(f[6]) + '</span>';
+      if (f[7] && f[7] !== 'None') html += '<span><span class="detail-label">Technician close comments:</span> ' + esc(f[7]) + '</span>';
+      if (f[9] && f[9] !== 'See comments' && f[9] !== 'None') html += '<span><span class="detail-label">Fault description:</span> ' + esc(f[9]) + '</span>';
+      html += '</div>';
+
+      // Note editor
       html += '<div class="note-input" id="note-'+esc(uid)+'">';
       html += '<textarea placeholder="Add a note about this fault...">' + esc(o.notes) + '</textarea>';
       html += '<button class="note-save" data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-uid="'+esc(uid)+'" data-action="save-note">Save note</button>';
@@ -592,6 +620,14 @@ document.addEventListener('click', function(e) {
   const noteBtn = e.target.closest('[data-action="toggle-note"]');
   if (noteBtn) {
     const el = document.getElementById('note-' + noteBtn.dataset.uid);
+    if (el) el.classList.toggle('visible');
+    return;
+  }
+
+  // Toggle detail panel
+  const detailBtn = e.target.closest('[data-action="toggle-detail"]');
+  if (detailBtn) {
+    const el = document.getElementById('detail-' + detailBtn.dataset.uid);
     if (el) el.classList.toggle('visible');
     return;
   }
