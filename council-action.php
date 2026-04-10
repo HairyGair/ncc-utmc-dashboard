@@ -477,7 +477,7 @@ function render() {
     
     const colour = CAT_COLOURS[cat] || '#6B7280';
     html += '<div class="cat-section" id="cat-' + cat.replace(/[^a-zA-Z]/g, '') + '">';
-    html += '<div class="cat-header" onclick="this.parentElement.classList.toggle(\"collapsed\")">';
+    html += '<div class="cat-header" data-toggle="cat">';
     html += '<span class="cat-badge" style="background:' + colour + '">' + items.length + '</span>';
     html += '<span class="cat-name">' + esc(cat) + '</span>';
     html += '<span class="cat-toggle">&#9660;</span>';
@@ -501,18 +501,18 @@ function render() {
       html += '</div>';
       
       html += '<div class="fault-actions">';
-      html += '<select onchange="updateStatus(\''+f[2]+'\',\''+fid+'\',this.value)">';
+      html += '<select data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-action="status">';
       html += '<option value="pending"' + (o.status==='pending'?' selected':'') + '>Pending</option>';
       html += '<option value="in_progress"' + (o.status==='in_progress'?' selected':'') + '>In Progress</option>';
       html += '<option value="completed"' + (o.status==='completed'?' selected':'') + '>Completed</option>';
       html += '<option value="escalated"' + (o.status==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
-      html += '<button class="note-btn" onclick="toggleNote(\''+uid+'\')">Add note</button>';
+      html += '<button class="note-btn" data-uid="'+esc(uid)+'" data-action="toggle-note">Add note</button>';
       html += '</div>';
-      
-      html += '<div class="note-input" id="note-'+uid+'">';
+
+      html += '<div class="note-input" id="note-'+esc(uid)+'">';
       html += '<textarea placeholder="Add a note about this fault...">' + esc(o.notes) + '</textarea>';
-      html += '<button class="note-save" onclick="saveNote(\''+f[2]+'\',\''+fid+'\',\''+uid+'\')">Save note</button>';
+      html += '<button class="note-save" data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-uid="'+esc(uid)+'" data-action="save-note">Save note</button>';
       html += '</div>';
       
       html += '</div>';
@@ -528,26 +528,47 @@ function render() {
   container.innerHTML = html;
 }
 
-function updateStatus(area, faultId, status) {
-  const o = getOutcome(area, faultId);
-  setOutcome(area, faultId, status, o.notes);
-  render();
-}
+// Event delegation — all clicks and changes handled here, no inline handlers
+document.addEventListener('click', function(e) {
+  // Category section toggle
+  const catHeader = e.target.closest('[data-toggle="cat"]');
+  if (catHeader) {
+    catHeader.parentElement.classList.toggle('collapsed');
+    return;
+  }
 
-function toggleNote(uid) {
-  const el = document.getElementById('note-' + uid);
-  if (el) el.classList.toggle('visible');
-}
+  // Toggle note panel
+  const noteBtn = e.target.closest('[data-action="toggle-note"]');
+  if (noteBtn) {
+    const el = document.getElementById('note-' + noteBtn.dataset.uid);
+    if (el) el.classList.toggle('visible');
+    return;
+  }
 
-function saveNote(area, faultId, uid) {
-  const el = document.getElementById('note-' + uid);
-  const textarea = el.querySelector('textarea');
-  const notes = textarea.value.trim();
-  const o = getOutcome(area, faultId);
-  setOutcome(area, faultId, o.status, notes);
-  el.classList.remove('visible');
-  render();
-}
+  // Save note
+  const saveBtn = e.target.closest('[data-action="save-note"]');
+  if (saveBtn) {
+    const el = document.getElementById('note-' + saveBtn.dataset.uid);
+    const textarea = el.querySelector('textarea');
+    const notes = textarea.value.trim();
+    const o = getOutcome(saveBtn.dataset.area, saveBtn.dataset.fid);
+    setOutcome(saveBtn.dataset.area, saveBtn.dataset.fid, o.status, notes);
+    el.classList.remove('visible');
+    render();
+    return;
+  }
+});
+
+document.addEventListener('change', function(e) {
+  // Status dropdown
+  const sel = e.target.closest('[data-action="status"]');
+  if (sel) {
+    const o = getOutcome(sel.dataset.area, sel.dataset.fid);
+    setOutcome(sel.dataset.area, sel.dataset.fid, sel.value, o.notes);
+    render();
+    return;
+  }
+});
 
 // Init
 loadLocalState();
