@@ -211,6 +211,9 @@
   .btn-navigate:hover { background: #15673D; }
   .btn-route { background: var(--ncc-blue); color: white; border-color: var(--ncc-blue); }
   .btn-route:hover { background: var(--navy-dark); }
+  .site-checkbox { width: 20px; height: 20px; accent-color: var(--ncc-blue); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+  .fault-card.selected { background: #EEF0FF; border-left: 4px solid var(--ncc-blue); }
+  .selection-count { font-size: 13px; color: var(--ncc-blue); font-weight: 600; }
 
   /* Print */
   .print-header, .print-meta { display: none; }
@@ -310,8 +313,10 @@
   <div class="stats-row" id="statsRow"></div>
   <div class="map-container">
     <div class="map-bar">
-      <span>Site locations</span>
-      <div style="display:flex;gap:8px">
+      <span>Site locations <span class="selection-count" id="selCount"></span></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm" data-action="select-all">Select all</button>
+        <button class="btn-sm" data-action="clear-selection">Clear</button>
         <button class="btn-sm btn-route" data-action="plan-route">Plan route</button>
         <button class="btn-sm" data-action="print-jobs">Print job sheet</button>
       </div>
@@ -730,10 +735,12 @@ function render() {
       const siteNoteKey = area + '__site__' + siteName.replace(/[^a-zA-Z0-9]/g, '_');
       const siteO = getOutcome(area, 'site__' + siteName.replace(/[^a-zA-Z0-9]/g, '_'));
 
-      html += '<div class="fault-card' + siteStatusClass + '">';
+      var isSelected = selectedSites.has(siteKey);
+      html += '<div class="fault-card' + siteStatusClass + (isSelected ? ' selected' : '') + '" data-site-key="' + esc(siteKey) + '">';
 
-      // Site name + fault count badge
+      // Checkbox + Site name + fault count badge
       html += '<div class="fault-top">';
+      html += '<input type="checkbox" class="site-checkbox" data-site-key="' + esc(siteKey) + '" ' + (isSelected ? 'checked' : '') + '>';
       var age = faultAge(first[3]);
       html += '<div><div class="fault-site">' + esc(siteName) + '</div>';
       html += '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + esc(area) + ' &middot; ' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + (age.text ? '<span class="fault-age ' + age.cls + '">' + age.text + '</span>' : '') + '</div></div>';
@@ -826,10 +833,15 @@ function render() {
 
   container.innerHTML = html;
 
-  // Update map
+  // Update map — show only selected sites if any are selected, otherwise show all
   currentSiteGroups = siteGroups;
   currentSiteOrder = siteOrder;
-  updateMap(siteGroups, siteOrder);
+  var mapOrder = selectedSites.size > 0 ? siteOrder.filter(k => selectedSites.has(k)) : siteOrder;
+  updateMap(siteGroups, mapOrder);
+
+  // Update selection count
+  var selEl = document.getElementById('selCount');
+  selEl.textContent = selectedSites.size > 0 ? '(' + selectedSites.size + ' selected)' : '';
 
   // Update print meta
   var aF = document.getElementById('areaFilter').value || 'All areas';
@@ -844,9 +856,34 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // Print job sheet
+  // Print job sheet — if sites selected, hide unselected before printing
   if (e.target.closest('[data-action="print-jobs"]')) {
+    if (selectedSites.size > 0) {
+      document.querySelectorAll('.fault-card').forEach(function(card) {
+        var key = card.dataset.siteKey;
+        if (key && !selectedSites.has(key)) card.style.display = 'none';
+      });
+    }
     window.print();
+    if (selectedSites.size > 0) {
+      document.querySelectorAll('.fault-card').forEach(function(card) {
+        card.style.display = '';
+      });
+    }
+    return;
+  }
+
+  // Select all visible sites
+  if (e.target.closest('[data-action="select-all"]')) {
+    currentSiteOrder.forEach(function(k) { selectedSites.add(k); });
+    render();
+    return;
+  }
+
+  // Clear selection
+  if (e.target.closest('[data-action="clear-selection"]')) {
+    selectedSites.clear();
+    render();
     return;
   }
 
@@ -919,6 +956,22 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('change', function(e) {
+  // Checkbox selection
+  const cb = e.target.closest('.site-checkbox');
+  if (cb) {
+    var key = cb.dataset.siteKey;
+    if (cb.checked) selectedSites.add(key);
+    else selectedSites.delete(key);
+    // Update map and counter without full re-render (keeps scroll position)
+    var mapOrder = selectedSites.size > 0 ? currentSiteOrder.filter(k => selectedSites.has(k)) : currentSiteOrder;
+    updateMap(currentSiteGroups, mapOrder);
+    document.getElementById('selCount').textContent = selectedSites.size > 0 ? '(' + selectedSites.size + ' selected)' : '';
+    // Toggle card highlight
+    var card = cb.closest('.fault-card');
+    if (card) card.classList.toggle('selected', cb.checked);
+    return;
+  }
+
   // Site-level status dropdown — sets ALL faults at the site
   const sel = e.target.closest('[data-action="site-status"]');
   if (sel) {
@@ -1048,19 +1101,23 @@ function updateMap(siteGroups, siteOrder) {
   if (bounds.length > 0) faultMap.fitBounds(bounds, {padding: [30, 30]});
 }
 
-// Route planner
+// Route planner — uses selected sites if any, otherwise pending sites in current filter
 function planRoute(siteGroups, siteOrder) {
+  var routeOrder = selectedSites.size > 0 ? siteOrder.filter(k => selectedSites.has(k)) : siteOrder;
   var waypoints = [];
-  for (var i = 0; i < siteOrder.length; i++) {
-    var faults = siteGroups[siteOrder[i]];
+  for (var i = 0; i < routeOrder.length; i++) {
+    var faults = siteGroups[routeOrder[i]];
     var first = faults[0];
     var lat = parseFloat(first[10]), lon = parseFloat(first[11]);
-    var o = getOutcome(first[2], first[0]);
-    if (!lat || !lon || o.status === 'completed') continue;
+    if (!lat || !lon) continue;
+    if (selectedSites.size === 0) {
+      var o = getOutcome(first[2], first[0]);
+      if (o.status === 'completed') continue;
+    }
     waypoints.push(lat + ',' + lon);
     if (waypoints.length >= 10) break;
   }
-  if (waypoints.length === 0) { alert('No pending sites with coordinates to route to.'); return; }
+  if (waypoints.length === 0) { alert('No sites with coordinates to route to. Select some sites first.'); return; }
   var dest = waypoints.pop();
   var url = 'https://www.google.com/maps/dir/?api=1&destination=' + dest;
   if (waypoints.length > 0) url += '&waypoints=' + waypoints.join('|');
@@ -1069,6 +1126,7 @@ function planRoute(siteGroups, siteOrder) {
 
 var currentSiteGroups = {};
 var currentSiteOrder = [];
+var selectedSites = new Set();
 
 // Init
 loadLocalState();
