@@ -78,50 +78,77 @@
   }
   
   .fault-card {
-    display: grid; grid-template-columns: 1fr auto;
-    padding: 12px 16px; border-bottom: 1px solid #eef0f4;
-    background: var(--white); gap: 8px;
+    padding: 16px 20px; border-bottom: 1px solid #eef0f4;
+    background: var(--white);
   }
   .fault-card:last-child { border-bottom: none; }
   .fault-card:hover { background: #fafbfd; }
-  .fault-card.status-completed { background: var(--green-bg); opacity: 0.7; }
+  .fault-card.status-completed { background: var(--green-bg); }
   .fault-card.status-in_progress { background: var(--amber-bg); }
-  
-  .fault-main { display: flex; flex-direction: column; gap: 4px; }
-  .fault-site { font-weight: 600; font-size: 14px; }
-  .fault-id { font-size: 12px; color: var(--text-light); }
-  .fault-info { font-size: 13px; color: var(--text-mid); line-height: 1.4; }
-  .fault-close { font-size: 12px; color: var(--accent); font-style: italic; }
-  .fault-meta { font-size: 11px; color: var(--text-light); }
-  
-  .fault-actions {
-    display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
-    justify-content: center; min-width: 140px;
+  .fault-card.status-escalated { background: var(--red-bg); }
+
+  .fault-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px;
   }
-  .fault-actions select {
-    padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 12px; background: var(--white); width: 140px;
+  .fault-site { font-weight: 600; font-size: 15px; color: var(--text); }
+  .fault-id { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .status-pill {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   }
-  .fault-actions .note-btn {
-    padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 11px; background: var(--white); cursor: pointer; color: var(--text-mid);
+  .status-pill.pending { background: #E5E7EB; color: #374151; }
+  .status-pill.in_progress { background: #FDE68A; color: #92400E; }
+  .status-pill.completed { background: #A7F3D0; color: #065F46; }
+  .status-pill.escalated { background: #FECACA; color: #991B1B; }
+
+  .fault-body { margin-bottom: 10px; }
+  .fault-section {
+    padding: 10px 14px; border-radius: 6px; margin-bottom: 8px;
+    font-size: 13px; line-height: 1.5;
   }
-  .fault-actions .note-btn:hover { background: #f0f2f5; }
-  
+  .fault-section:last-child { margin-bottom: 0; }
+  .fault-section-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .section-description { background: #F8F9FC; border-left: 3px solid var(--border); color: var(--text-mid); }
+  .section-description .fault-section-label { color: var(--text-light); }
+  .section-tech { background: #EBF5FF; border-left: 3px solid var(--accent); color: #1E40AF; }
+  .section-tech .fault-section-label { color: var(--accent); }
+  .section-notes { background: #FFF7ED; border-left: 3px solid #F59E0B; color: #92400E; }
+  .section-notes .fault-section-label { color: #B45309; }
+  .fault-code { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+  .fault-footer {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .fault-footer select {
+    padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; background: var(--white); min-width: 150px;
+  }
+  .fault-footer .note-btn {
+    padding: 7px 14px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; background: var(--white); cursor: pointer; color: var(--text-mid);
+  }
+  .fault-footer .note-btn:hover { background: #f0f2f5; }
+
   .note-input {
-    display: none; grid-column: 1 / -1; padding: 8px 0;
+    display: none; margin-top: 10px;
   }
   .note-input.visible { display: block; }
   .note-input textarea {
-    width: 100%; padding: 8px; border: 1px solid var(--border);
-    border-radius: 4px; font-size: 13px; resize: vertical; min-height: 60px;
+    width: 100%; padding: 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; resize: vertical; min-height: 80px;
+    font-family: inherit;
   }
   .note-input .note-save {
-    margin-top: 6px; padding: 6px 16px; background: var(--accent); color: white;
-    border: none; border-radius: 4px; font-size: 12px; cursor: pointer;
+    margin-top: 8px; padding: 8px 20px; background: var(--accent); color: white;
+    border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;
   }
-  
-  .empty { text-align: center; padding: 40px; color: var(--text-light); }
+  .note-input .note-save:hover { background: #2563EB; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 15px; }
   
   @media (max-width: 768px) {
     .fault-card { grid-template-columns: 1fr; }
@@ -491,23 +518,46 @@ function render() {
       const uid = f[2] + '__' + fid;
       
       html += '<div class="fault-card' + statusClass + '" data-uid="' + uid + '">';
-      html += '<div class="fault-main">';
-      html += '<div class="fault-site">' + esc(f[1]) + '</div>';
-      html += '<div class="fault-id">' + esc(fid) + ' | ' + esc(f[2]) + ' | Created: ' + esc(f[3]) + ' | IMTRAC: ' + esc(f[4]) + '</div>';
-      if (f[6]) html += '<div class="fault-info">' + esc(f[6]).substring(0, 300) + '</div>';
-      if (f[7] && f[7] !== 'None') html += '<div class="fault-close">Tech notes: ' + esc(f[7]).substring(0, 200) + '</div>';
-      if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<div class="fault-meta">Code: ' + esc(f[8]) + '</div>';
-      if (o.notes) html += '<div class="fault-meta" style="color:var(--accent)">Notes: ' + esc(o.notes) + '</div>';
+
+      // Top row: site name + status pill
+      html += '<div class="fault-top">';
+      html += '<div><div class="fault-site">' + esc(f[1]) + '</div>';
+      html += '<div class="fault-id">' + esc(fid) + ' &middot; ' + esc(f[2]) + ' &middot; ' + esc(f[3]) + ' &middot; IMTRAC: ' + esc(f[4]) + '</div></div>';
+      html += '<span class="status-pill ' + o.status + '">' + o.status.replace('_', ' ') + '</span>';
       html += '</div>';
-      
-      html += '<div class="fault-actions">';
+
+      // Body: full description, tech notes, user notes
+      html += '<div class="fault-body">';
+      if (f[6]) {
+        html += '<div class="fault-section section-description">';
+        html += '<div class="fault-section-label">Description</div>';
+        html += esc(f[6]);
+        if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<div class="fault-code">Fault code: ' + esc(f[8]) + '</div>';
+        html += '</div>';
+      }
+      if (f[7] && f[7] !== 'None') {
+        html += '<div class="fault-section section-tech">';
+        html += '<div class="fault-section-label">Technician Notes</div>';
+        html += esc(f[7]);
+        html += '</div>';
+      }
+      if (o.notes) {
+        html += '<div class="fault-section section-notes">';
+        html += '<div class="fault-section-label">Your Notes</div>';
+        html += esc(o.notes);
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // Footer: actions
+      html += '<div class="fault-footer">';
       html += '<select data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-action="status">';
       html += '<option value="pending"' + (o.status==='pending'?' selected':'') + '>Pending</option>';
       html += '<option value="in_progress"' + (o.status==='in_progress'?' selected':'') + '>In Progress</option>';
       html += '<option value="completed"' + (o.status==='completed'?' selected':'') + '>Completed</option>';
       html += '<option value="escalated"' + (o.status==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
-      html += '<button class="note-btn" data-uid="'+esc(uid)+'" data-action="toggle-note">Add note</button>';
+      html += '<button class="note-btn" data-uid="'+esc(uid)+'" data-action="toggle-note">' + (o.notes ? 'Edit note' : 'Add note') + '</button>';
       html += '</div>';
 
       html += '<div class="note-input" id="note-'+esc(uid)+'">';
