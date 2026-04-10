@@ -284,16 +284,6 @@
 </div>
 
 <div class="controls">
-  <select id="areaFilter">
-    <option value="">All areas</option>
-    <option>Durham</option>
-    <option>Gateshead</option>
-    <option>Newcastle</option>
-    <option>North Tyneside</option>
-    <option>Northumberland</option>
-    <option>South Tyneside</option>
-    <option>Sunderland</option>
-  </select>
   <select id="statusFilter">
     <option value="">All statuses</option>
     <option value="pending">Pending</option>
@@ -305,6 +295,7 @@
   <button class="btn-sm" data-action="export-csv" style="white-space:nowrap">Export CSV</button>
 </div>
 
+<div class="cat-filters" id="areaFilters" style="border-bottom:1px solid var(--border)"></div>
 <div class="cat-filters" id="catFilters"></div>
 
 <div class="container">
@@ -627,9 +618,11 @@ function cleanForTech(info, closeComments) {
 }
 
 let activeCat = ''; // empty = show all
+let activeArea = ''; // empty = show all
+const ALL_AREAS = ['Durham','Gateshead','Newcastle','North Tyneside','Northumberland','South Tyneside','Sunderland'];
 
 function render() {
-  const areaFilter = document.getElementById('areaFilter').value;
+  const areaFilter = activeArea;
   const statusFilter = document.getElementById('statusFilter').value;
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
 
@@ -644,6 +637,23 @@ function render() {
     }
     return true;
   });
+
+  // Build area filter buttons — count ALL faults per area (before area filter)
+  const allForAreaCount = FAULTS.filter(f => {
+    const o = getOutcome(f[2], f[0]);
+    if (statusFilter && o.status !== statusFilter) return false;
+    if (search) { const hay = (f[0]+' '+f[1]+' '+f[6]+' '+f[7]+' '+f[8]).toLowerCase(); if (!hay.includes(search)) return false; }
+    return true;
+  });
+  const areaCounts = {};
+  ALL_AREAS.forEach(a => areaCounts[a] = 0);
+  allForAreaCount.forEach(f => areaCounts[f[2]] = (areaCounts[f[2]] || 0) + 1);
+  let areaBtnHtml = '<button class="cat-btn' + (!activeArea ? ' active' : '') + '" data-area-btn="">All areas<span class="cat-btn-count">' + allForAreaCount.length + '</span></button>';
+  for (const area of ALL_AREAS) {
+    if (areaCounts[area] === 0) continue;
+    areaBtnHtml += '<button class="cat-btn' + (activeArea === area ? ' active' : '') + '" data-area-btn="' + esc(area) + '">' + esc(area) + '<span class="cat-btn-count">' + areaCounts[area] + '</span></button>';
+  }
+  document.getElementById('areaFilters').innerHTML = areaBtnHtml;
 
   // Count per category (for button badges) — before category filter
   const catCounts = {};
@@ -844,7 +854,7 @@ function render() {
   selEl.textContent = selectedSites.size > 0 ? '(' + selectedSites.size + ' selected)' : '';
 
   // Update print meta
-  var aF = document.getElementById('areaFilter').value || 'All areas';
+  var aF = activeArea || 'All areas';
   document.getElementById('printMeta').textContent = aF + ' | ' + (activeCat || 'All categories') + ' | Printed ' + new Date().toLocaleDateString('en-GB');
 }
 
@@ -887,9 +897,17 @@ document.addEventListener('click', function(e) {
     return;
   }
 
+  // Area filter button
+  const areaBtn = e.target.closest('[data-area-btn]');
+  if (areaBtn && !e.target.closest('[data-cat]')) {
+    activeArea = areaBtn.dataset.areaBtn || '';
+    render();
+    return;
+  }
+
   // Category filter button
-  const catBtn = e.target.closest('.cat-btn');
-  if (catBtn) {
+  const catBtn = e.target.closest('[data-cat]');
+  if (catBtn && !e.target.closest('[data-area-btn]')) {
     activeCat = catBtn.dataset.cat || '';
     render();
     return;
@@ -1024,7 +1042,7 @@ function applyRecats() {
 
 // CSV export of currently filtered/visible data
 function exportCSV() {
-  var areaFilter = document.getElementById('areaFilter').value;
+  var areaFilter = activeArea;
   var statusFilter = document.getElementById('statusFilter').value;
   var search = document.getElementById('searchInput').value.toLowerCase().trim();
 
@@ -1133,7 +1151,6 @@ loadLocalState();
 applyRecats();
 loadFromServer().then(() => render());
 
-document.getElementById('areaFilter').addEventListener('change', render);
 document.getElementById('statusFilter').addEventListener('change', render);
 document.getElementById('searchInput').addEventListener('input', render);
 </script>
