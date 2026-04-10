@@ -477,7 +477,7 @@ function render() {
     
     const colour = CAT_COLOURS[cat] || '#6B7280';
     html += '<div class="cat-section" id="cat-' + cat.replace(/[^a-zA-Z]/g, '') + '">';
-    html += '<div class="cat-header" onclick="this.parentElement.classList.toggle('collapsed')">';
+    html += '<div class="cat-header" onclick="this.parentElement.classList.toggle(\"collapsed\")">';
     html += '<span class="cat-badge" style="background:' + colour + '">' + items.length + '</span>';
     html += '<span class="cat-name">' + esc(cat) + '</span>';
     html += '<span class="cat-toggle">&#9660;</span>';
