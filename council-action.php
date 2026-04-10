@@ -595,17 +595,13 @@ function render() {
       
       html += '<div class="fault-card' + statusClass + '" data-uid="' + uid + '">';
 
-      // Top: site name + status
+      // Clean card: site name + status. That's it.
       html += '<div class="fault-top">';
       html += '<div class="fault-site">' + esc(f[1]) + '</div>';
       html += '<span class="status-pill ' + o.status + '">' + o.status.replace('_', ' ') + '</span>';
       html += '</div>';
 
-      // Summary: clean, readable version of what's wrong
-      var summary = cleanForTech(f[6] || '', f[7] || '');
-      if (summary) html += '<div class="fault-summary">' + esc(summary) + '</div>';
-
-      // Notes (full, prominent)
+      // Notes (full, prominent — only if set)
       if (o.notes) {
         html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(o.notes) + '</div>';
       }
@@ -619,7 +615,7 @@ function render() {
       html += '<option value="escalated"' + (o.status==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
       html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-note">' + (o.notes ? 'Edit note' : 'Add note') + '</button>';
-      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-detail">More info</button>';
+      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-detail">Details</button>';
       html += '</div>';
 
       // Hidden detail panel (admin info for when you need it)
