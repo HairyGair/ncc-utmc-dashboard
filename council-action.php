@@ -608,76 +608,141 @@ function render() {
     '<div class="stat-card stat-progress"><div class="stat-number">' + inProgress + '</div><div class="stat-label">In progress</div></div>' +
     '<div class="stat-card stat-completed"><div class="stat-number">' + completed + '</div><div class="stat-label">Completed</div></div>';
 
-  // Render flat list
+  // Group by site (area + site name) — one card per location
+  const siteGroups = {};
+  const siteOrder = [];
+  for (const f of filtered) {
+    const siteKey = f[2] + '|' + f[1]; // area|site
+    if (!siteGroups[siteKey]) {
+      siteGroups[siteKey] = [];
+      siteOrder.push(siteKey);
+    }
+    siteGroups[siteKey].push(f);
+  }
+
+  // Stats — count sites not individual faults
+  const siteCount = siteOrder.length;
+  const faultCount = filtered.length;
+  const sitesCompleted = siteOrder.filter(k => {
+    return siteGroups[k].every(f => getOutcome(f[2], f[0]).status === 'completed');
+  }).length;
+  const sitesInProgress = siteOrder.filter(k => {
+    return siteGroups[k].some(f => getOutcome(f[2], f[0]).status === 'in_progress') &&
+           !siteGroups[k].every(f => getOutcome(f[2], f[0]).status === 'completed');
+  }).length;
+  const sitesPending = siteCount - sitesCompleted - sitesInProgress;
+
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-card stat-total"><div class="stat-number">' + siteCount + '</div><div class="stat-label">Sites (' + faultCount + ' faults)</div></div>' +
+    '<div class="stat-card stat-pending"><div class="stat-number">' + sitesPending + '</div><div class="stat-label">Pending</div></div>' +
+    '<div class="stat-card stat-progress"><div class="stat-number">' + sitesInProgress + '</div><div class="stat-label">In progress</div></div>' +
+    '<div class="stat-card stat-completed"><div class="stat-number">' + sitesCompleted + '</div><div class="stat-label">Completed</div></div>';
+
+  // Render grouped cards
   const container = document.getElementById('content');
   let html = '';
 
-  if (filtered.length > 0) {
+  if (siteOrder.length > 0) {
     html += '<div class="fault-list">';
-    for (const f of filtered) {
-      const o = getOutcome(f[2], f[0]);
-      const statusClass = o.status !== 'pending' ? ' status-' + o.status : '';
-      const fid = f[0];
-      const uid = f[2] + '__' + fid;
-      
-      html += '<div class="fault-card' + statusClass + '" data-uid="' + uid + '">';
+    for (const siteKey of siteOrder) {
+      const faults = siteGroups[siteKey];
+      const first = faults[0]; // use first fault for site name/area
+      const siteName = first[1];
+      const area = first[2];
+      const siteUid = (area + '__' + siteName).replace(/[^a-zA-Z0-9_]/g, '_');
 
-      // Site name + status
+      // Determine overall site status (worst status wins)
+      const allCompleted = faults.every(f => getOutcome(f[2], f[0]).status === 'completed');
+      const anyInProgress = faults.some(f => getOutcome(f[2], f[0]).status === 'in_progress');
+      const anyEscalated = faults.some(f => getOutcome(f[2], f[0]).status === 'escalated');
+      const siteStatusClass = allCompleted ? ' status-completed' : anyEscalated ? ' status-escalated' : anyInProgress ? ' status-in_progress' : '';
+
+      // Collect unique fault codes and categories
+      const codes = new Set();
+      const cats = new Set();
+      faults.forEach(f => {
+        if (f[8] && f[8] !== '-' && f[8] !== 'None') codes.add(f[8]);
+        cats.add(f[5]);
+      });
+
+      // Get notes for the site (use first fault's uid for site-level notes)
+      const siteNoteKey = area + '__site__' + siteName.replace(/[^a-zA-Z0-9]/g, '_');
+      const siteO = getOutcome(area, 'site__' + siteName.replace(/[^a-zA-Z0-9]/g, '_'));
+
+      html += '<div class="fault-card' + siteStatusClass + '">';
+
+      // Site name + fault count badge
       html += '<div class="fault-top">';
-      html += '<div class="fault-site">' + esc(f[1]) + '</div>';
-      html += '<span class="status-pill ' + o.status + '">' + o.status.replace('_', ' ') + '</span>';
+      html += '<div><div class="fault-site">' + esc(siteName) + '</div>';
+      html += '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + esc(area) + ' &middot; ' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + '</div></div>';
+      if (allCompleted) html += '<span class="status-pill completed">completed</span>';
+      else if (anyEscalated) html += '<span class="status-pill escalated">escalated</span>';
+      else if (anyInProgress) html += '<span class="status-pill in_progress">in progress</span>';
+      else html += '<span class="status-pill pending">pending</span>';
       html += '</div>';
 
-      // Additional info — what needs doing
-      if (f[6]) html += '<div class="fault-summary">' + esc(f[6]) + '</div>';
-
-      // Fault codes and description
-      var codeStr = '';
-      if (f[8] && f[8] !== '-' && f[8] !== 'None') codeStr += f[8];
-      if (f[9] && f[9] !== 'See comments' && f[9] !== 'None') codeStr += (codeStr ? ' — ' : '') + f[9];
-      if (codeStr) html += '<div class="fault-codes">' + esc(codeStr) + '</div>';
-
-      // User notes (full, prominent — only if set)
-      if (o.notes) {
-        html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(o.notes) + '</div>';
+      // Show additional info from each fault (deduplicated)
+      const infos = new Set();
+      faults.forEach(f => { if (f[6] && f[6].length > 3) infos.add(f[6]); });
+      if (infos.size > 0) {
+        html += '<div class="fault-summary">';
+        var infoArr = Array.from(infos);
+        html += esc(infoArr[0]);
+        if (infoArr.length > 1) html += '<div style="margin-top:4px;font-size:12px;color:var(--text-light)">+ ' + (infoArr.length - 1) + ' more report' + (infoArr.length > 2 ? 's' : '') + '</div>';
+        html += '</div>';
       }
 
-      // Actions row
+      // Fault codes
+      if (codes.size > 0) html += '<div class="fault-codes">' + esc(Array.from(codes).join(' | ')) + '</div>';
+
+      // Categories (if mixed)
+      if (cats.size > 1) {
+        html += '<div style="font-size:11px;color:var(--text-light);margin-bottom:8px">Categories: ' + esc(Array.from(cats).join(', ')) + '</div>';
+      }
+
+      // Site-level notes
+      if (siteO.notes) {
+        html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(siteO.notes) + '</div>';
+      }
+
+      // Actions — status applies to ALL faults at this site
       html += '<div class="fault-footer">';
-      html += '<select data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-action="status">';
-      html += '<option value="pending"' + (o.status==='pending'?' selected':'') + '>Pending</option>';
-      html += '<option value="in_progress"' + (o.status==='in_progress'?' selected':'') + '>In Progress</option>';
-      html += '<option value="completed"' + (o.status==='completed'?' selected':'') + '>Completed</option>';
-      html += '<option value="escalated"' + (o.status==='escalated'?' selected':'') + '>Escalated</option>';
+      html += '<select data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-fids="'+esc(faults.map(f=>f[0]).join(','))+'" data-action="site-status">';
+      var currentStatus = allCompleted ? 'completed' : anyEscalated ? 'escalated' : anyInProgress ? 'in_progress' : 'pending';
+      html += '<option value="pending"' + (currentStatus==='pending'?' selected':'') + '>Pending</option>';
+      html += '<option value="in_progress"' + (currentStatus==='in_progress'?' selected':'') + '>In Progress</option>';
+      html += '<option value="completed"' + (currentStatus==='completed'?' selected':'') + '>Completed</option>';
+      html += '<option value="escalated"' + (currentStatus==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
-      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-note">' + (o.notes ? 'Edit note' : 'Add note') + '</button>';
-      html += '<button class="btn-sm" data-uid="'+esc(uid)+'" data-action="toggle-detail">Details</button>';
+      html += '<button class="btn-sm" data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-action="toggle-site-note">Add note</button>';
+      html += '<button class="btn-sm" data-site-uid="'+esc(siteUid)+'" data-action="toggle-site-detail">' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + ' - details</button>';
       html += '</div>';
 
-      // Hidden detail panel (admin info for when you need it)
-      html += '<div class="fault-detail" id="detail-'+esc(uid)+'">';
-      html += '<span><span class="detail-label">Fault ID:</span> ' + esc(fid) + '</span>';
-      html += '<span><span class="detail-label">Area:</span> ' + esc(f[2]) + '</span>';
-      html += '<span><span class="detail-label">Created:</span> ' + esc(f[3]) + '</span>';
-      html += '<span><span class="detail-label">IMTRAC status:</span> ' + esc(f[4]) + '</span>';
-      if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<span><span class="detail-label">Fault code:</span> ' + esc(f[8]) + '</span>';
-      if (f[6]) html += '<span><span class="detail-label">Full additional info:</span> ' + esc(f[6]) + '</span>';
-      if (f[7] && f[7] !== 'None') html += '<span><span class="detail-label">Technician close comments:</span> ' + esc(f[7]) + '</span>';
-      if (f[9] && f[9] !== 'See comments' && f[9] !== 'None') html += '<span><span class="detail-label">Fault description:</span> ' + esc(f[9]) + '</span>';
+      // Site-level note editor
+      var noteId = 'sitenote-' + siteUid;
+      html += '<div class="note-input" id="'+noteId+'">';
+      html += '<textarea placeholder="Add a note for this site...">' + esc(siteO.notes) + '</textarea>';
+      html += '<button class="note-save" data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-action="save-site-note" data-note-id="'+noteId+'">Save note</button>';
       html += '</div>';
 
-      // Note editor
-      html += '<div class="note-input" id="note-'+esc(uid)+'">';
-      html += '<textarea placeholder="Add a note about this fault...">' + esc(o.notes) + '</textarea>';
-      html += '<button class="note-save" data-area="'+esc(f[2])+'" data-fid="'+esc(fid)+'" data-uid="'+esc(uid)+'" data-action="save-note">Save note</button>';
+      // Expandable detail: individual faults
+      html += '<div class="fault-detail" id="sitedetail-'+esc(siteUid)+'">';
+      for (const f of faults) {
+        html += '<div style="padding:8px 0;border-bottom:1px solid #eee">';
+        html += '<span><span class="detail-label">' + esc(f[0]) + '</span> - ' + esc(f[3]) + ' - ' + esc(f[4]) + '</span>';
+        if (f[6]) html += '<span style="display:block;margin-top:4px">' + esc(f[6]) + '</span>';
+        if (f[7] && f[7] !== 'None') html += '<span style="display:block;color:var(--accent);font-style:italic;margin-top:2px">Tech: ' + esc(f[7]) + '</span>';
+        if (f[8] && f[8] !== '-' && f[8] !== 'None') html += '<span style="display:block;margin-top:2px;font-size:11px">Code: ' + esc(f[8]) + '</span>';
+        html += '</div>';
+      }
       html += '</div>';
-      
+
       html += '</div>';
     }
     html += '</div>';
   }
 
-  if (total === 0) {
+  if (siteOrder.length === 0) {
     html = '<div class="empty">No faults match your filters.</div>';
   }
 
@@ -702,11 +767,34 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // Toggle detail panel
-  const detailBtn = e.target.closest('[data-action="toggle-detail"]');
+  // Toggle site detail panel
+  const detailBtn = e.target.closest('[data-action="toggle-site-detail"]');
   if (detailBtn) {
-    const el = document.getElementById('detail-' + detailBtn.dataset.uid);
+    const el = document.getElementById('sitedetail-' + detailBtn.dataset.siteUid);
     if (el) el.classList.toggle('visible');
+    return;
+  }
+
+  // Toggle site note
+  const siteNoteBtn = e.target.closest('[data-action="toggle-site-note"]');
+  if (siteNoteBtn) {
+    const area = siteNoteBtn.dataset.area;
+    const site = siteNoteBtn.dataset.site;
+    const noteId = 'sitenote-' + (area + '__' + site).replace(/[^a-zA-Z0-9_]/g, '_');
+    const el = document.getElementById(noteId);
+    if (el) el.classList.toggle('visible');
+    return;
+  }
+
+  // Save site note
+  const saveSiteNote = e.target.closest('[data-action="save-site-note"]');
+  if (saveSiteNote) {
+    const el = document.getElementById(saveSiteNote.dataset.noteId);
+    const notes = el.querySelector('textarea').value.trim();
+    const fid = 'site__' + saveSiteNote.dataset.site.replace(/[^a-zA-Z0-9]/g, '_');
+    setOutcome(saveSiteNote.dataset.area, fid, getOutcome(saveSiteNote.dataset.area, fid).status || 'pending', notes);
+    el.classList.remove('visible');
+    render();
     return;
   }
 
@@ -725,11 +813,15 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('change', function(e) {
-  // Status dropdown
-  const sel = e.target.closest('[data-action="status"]');
+  // Site-level status dropdown — sets ALL faults at the site
+  const sel = e.target.closest('[data-action="site-status"]');
   if (sel) {
-    const o = getOutcome(sel.dataset.area, sel.dataset.fid);
-    setOutcome(sel.dataset.area, sel.dataset.fid, sel.value, o.notes);
+    const fids = sel.dataset.fids.split(',');
+    const area = sel.dataset.area;
+    fids.forEach(function(fid) {
+      const o = getOutcome(area, fid);
+      setOutcome(area, fid, sel.value, o.notes);
+    });
     render();
     return;
   }
