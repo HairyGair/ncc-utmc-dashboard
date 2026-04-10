@@ -260,7 +260,7 @@
     <option value="escalated">Escalated</option>
   </select>
   <input type="text" id="searchInput" placeholder="Search by site, fault ID, or description...">
-  <div class="stats" id="statsBar"></div>
+  <button class="btn-sm" data-action="export-csv" style="white-space:nowrap">Export CSV</button>
 </div>
 
 <div class="cat-filters" id="catFilters"></div>
@@ -708,8 +708,9 @@ function render() {
         html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(siteO.notes) + '</div>';
       }
 
-      // Actions — status applies to ALL faults at this site
+      // Actions row
       html += '<div class="fault-footer">';
+      // Status
       html += '<select data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-fids="'+esc(faults.map(f=>f[0]).join(','))+'" data-action="site-status">';
       var currentStatus = allCompleted ? 'completed' : anyEscalated ? 'escalated' : anyInProgress ? 'in_progress' : 'pending';
       html += '<option value="pending"' + (currentStatus==='pending'?' selected':'') + '>Pending</option>';
@@ -717,7 +718,15 @@ function render() {
       html += '<option value="completed"' + (currentStatus==='completed'?' selected':'') + '>Completed</option>';
       html += '<option value="escalated"' + (currentStatus==='escalated'?' selected':'') + '>Escalated</option>';
       html += '</select>';
-      html += '<button class="btn-sm" data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-action="toggle-site-note">Add note</button>';
+      // Recategorise
+      var siteCat = Array.from(cats)[0] || '';
+      html += '<select data-area="'+esc(area)+'" data-fids="'+esc(faults.map(f=>f[0]).join(','))+'" data-action="recat" style="font-size:11px">';
+      for (var ci = 0; ci < CATEGORIES.length; ci++) {
+        var c = CATEGORIES[ci];
+        html += '<option value="'+esc(c)+'"' + (c === siteCat ? ' selected' : '') + '>' + esc(c) + '</option>';
+      }
+      html += '</select>';
+      html += '<button class="btn-sm" data-area="'+esc(area)+'" data-site="'+esc(siteName)+'" data-action="toggle-site-note">' + (siteO.notes ? 'Edit note' : 'Add note') + '</button>';
       html += '<button class="btn-sm" data-site-uid="'+esc(siteUid)+'" data-action="toggle-site-detail">' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + ' - details</button>';
       html += '</div>';
 
@@ -789,6 +798,13 @@ document.addEventListener('click', function(e) {
     return;
   }
 
+  // CSV export
+  const exportBtn = e.target.closest('[data-action="export-csv"]');
+  if (exportBtn) {
+    exportCSV();
+    return;
+  }
+
   // Save site note
   const saveSiteNote = e.target.closest('[data-action="save-site-note"]');
   if (saveSiteNote) {
@@ -828,10 +844,83 @@ document.addEventListener('change', function(e) {
     render();
     return;
   }
+
+  // Recategorise — updates the category in the FAULTS data
+  const recat = e.target.closest('[data-action="recat"]');
+  if (recat) {
+    const fids = recat.dataset.fids.split(',');
+    const area = recat.dataset.area;
+    const newCat = recat.value;
+    // Update the in-memory FAULTS array
+    fids.forEach(function(fid) {
+      for (var i = 0; i < FAULTS.length; i++) {
+        if (FAULTS[i][0] === fid && FAULTS[i][2] === area) {
+          FAULTS[i][5] = newCat;
+        }
+      }
+    });
+    // Save recategorisations to localStorage
+    var recats = JSON.parse(localStorage.getItem('council_action_recats') || '{}');
+    fids.forEach(function(fid) { recats[area + '|' + fid] = newCat; });
+    localStorage.setItem('council_action_recats', JSON.stringify(recats));
+    render();
+    return;
+  }
 });
+
+// Apply saved recategorisations on load
+function applyRecats() {
+  var recats = JSON.parse(localStorage.getItem('council_action_recats') || '{}');
+  for (var key in recats) {
+    var parts = key.split('|');
+    var area = parts[0], fid = parts[1];
+    for (var i = 0; i < FAULTS.length; i++) {
+      if (FAULTS[i][0] === fid && FAULTS[i][2] === area) {
+        FAULTS[i][5] = recats[key];
+      }
+    }
+  }
+}
+
+// CSV export of currently filtered/visible data
+function exportCSV() {
+  var areaFilter = document.getElementById('areaFilter').value;
+  var statusFilter = document.getElementById('statusFilter').value;
+  var search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  var rows = FAULTS.filter(function(f) {
+    if (areaFilter && f[2] !== areaFilter) return false;
+    var o = getOutcome(f[2], f[0]);
+    if (statusFilter && o.status !== statusFilter) return false;
+    if (activeCat && f[5] !== activeCat) return false;
+    if (search) {
+      var hay = (f[0] + ' ' + f[1] + ' ' + f[6] + ' ' + f[7] + ' ' + f[8]).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  var csvLines = ['Fault ID,Site,Area,Created,IMTRAC Status,Category,Additional Info,Close Comments,Fault Code,Fault Description,Status,Notes'];
+  rows.forEach(function(f) {
+    var o = getOutcome(f[2], f[0]);
+    var line = [f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8], f[9] || '', o.status, o.notes || ''];
+    csvLines.push(line.map(function(v) {
+      return '"' + String(v || '').replace(/"/g, '""') + '"';
+    }).join(','));
+  });
+
+  var blob = new Blob(['\uFEFF' + csvLines.join('\n')], {type: 'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'council-action-' + (areaFilter || 'all') + '-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // Init
 loadLocalState();
+applyRecats();
 loadFromServer().then(() => render());
 
 document.getElementById('areaFilter').addEventListener('change', render);
