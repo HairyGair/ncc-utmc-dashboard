@@ -111,6 +111,10 @@ try {
             handle_visits($method);
             break;
 
+        case 'council_action':
+            handle_council_action($method);
+            break;
+
         default:
             json_error('Unknown page', 404);
     }
@@ -409,6 +413,71 @@ function handle_visits(string $method): void
 
             default:
                 json_error('Unknown action');
+        }
+    }
+
+    json_error('Method not allowed', 405);
+}
+
+// ---------------------------------------------------------------------------
+// Council Action page
+// ---------------------------------------------------------------------------
+
+function handle_council_action(string $method): void
+{
+    $pdo = get_pdo();
+
+    if ($method === 'GET') {
+        $stmt = $pdo->query(
+            'SELECT fault_id, area, status, notes, updated_at
+               FROM council_action_outcomes
+              ORDER BY area, fault_id'
+        );
+        json_success(['outcomes' => $stmt->fetchAll()]);
+    }
+
+    if ($method === 'POST') {
+        $body = get_body();
+        $action = $body['action'] ?? '';
+
+        switch ($action) {
+            case 'save':
+                $faultId = trim($body['faultId'] ?? '');
+                $area    = trim($body['area'] ?? '');
+                $status  = trim($body['status'] ?? 'pending');
+                $notes   = trim($body['notes'] ?? '');
+
+                if (!$faultId || !$area) {
+                    json_error('faultId and area are required.');
+                }
+
+                $stmt = $pdo->prepare(
+                    'INSERT INTO council_action_outcomes (fault_id, area, status, notes)
+                     VALUES (:fid, :area, :status, :notes)
+                     ON DUPLICATE KEY UPDATE status = VALUES(status), notes = VALUES(notes), updated_at = NOW()'
+                );
+                $stmt->execute([
+                    ':fid'    => $faultId,
+                    ':area'   => $area,
+                    ':status' => $status,
+                    ':notes'  => $notes,
+                ]);
+                json_success(['message' => 'Saved.']);
+
+            case 'clear':
+                $faultId = trim($body['faultId'] ?? '');
+                $area    = trim($body['area'] ?? '');
+                if (!$faultId || !$area) {
+                    json_error('faultId and area are required.');
+                }
+                $stmt = $pdo->prepare(
+                    'DELETE FROM council_action_outcomes WHERE fault_id = :fid AND area = :area'
+                );
+                $stmt->execute([':fid' => $faultId, ':area' => $area]);
+                json_success(['message' => 'Cleared.']);
+
+            default:
+                json_error('Unknown action: ' . $action);
         }
     }
 

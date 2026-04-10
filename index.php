@@ -385,6 +385,28 @@
       </div>
     </a>
 
+    <!-- Council Action -->
+    <a href="council-action.php" class="dash-card dash-card--amber" aria-label="Council Action — Fault actions grouped by category">
+      <div class="card-header">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="card-tag">Action</span>
+      </div>
+      <div class="card-title">Council Action</div>
+      <div class="card-desc">Fault actions grouped by category for technicians</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        Open dashboard
+      </div>
+    </a>
+
   </nav>
 </main>
 
