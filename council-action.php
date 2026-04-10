@@ -10,6 +10,8 @@
 <title>UTMC Council Action Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
     --ncc-blue: #444970;
@@ -187,7 +189,44 @@
   .note-input .note-save:hover { background: #2563EB; }
 
   .empty { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 15px; }
-  
+
+  /* Map */
+  .map-container { margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  #faultMap { height: 350px; width: 100%; }
+  .map-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; background: var(--white); border-bottom: 1px solid var(--border); }
+  .map-bar span { font-size: 14px; font-weight: 600; color: var(--ncc-blue); }
+
+  /* Fault age */
+  .fault-age { font-size: 12px; font-weight: 500; display: inline-block; margin-left: 8px; }
+  .age-recent { color: var(--green); }
+  .age-weeks { color: var(--amber); }
+  .age-months { color: var(--red); }
+
+  /* Visual polish */
+  .stat-card { transition: transform 0.15s, box-shadow 0.15s; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .fault-card { transition: background 0.15s, box-shadow 0.15s; }
+  .fault-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .btn-navigate { background: #1A7F4B; color: white; border-color: #1A7F4B; }
+  .btn-navigate:hover { background: #15673D; }
+  .btn-route { background: var(--ncc-blue); color: white; border-color: var(--ncc-blue); }
+  .btn-route:hover { background: var(--navy-dark); }
+
+  /* Print */
+  .print-header, .print-meta { display: none; }
+  @media print {
+    .topbar, .controls, .cat-filters, .map-container, .fault-footer,
+    .note-input, .fault-detail, .stats-row { display: none !important; }
+    body { background: white; font-size: 11pt; }
+    .container { max-width: 100%; padding: 0; }
+    .fault-list { border: none; box-shadow: none; }
+    .fault-card { padding: 10px 0; border-bottom: 1px solid #ccc; page-break-inside: avoid; box-shadow: none !important; }
+    .fault-site { font-size: 13pt; }
+    .print-header { display: block !important; text-align: center; margin-bottom: 16px; font-size: 16pt; font-weight: 700; color: #444970; }
+    .print-meta { display: block !important; text-align: center; margin-bottom: 16px; font-size: 10pt; color: #666; }
+    @page { margin: 1.5cm; }
+  }
+
   /* Category filter buttons */
   .cat-filters {
     padding: 14px 24px; background: var(--white);
@@ -266,7 +305,19 @@
 <div class="cat-filters" id="catFilters"></div>
 
 <div class="container">
+  <div class="print-header">Council Action - Job Sheet</div>
+  <div class="print-meta" id="printMeta"></div>
   <div class="stats-row" id="statsRow"></div>
+  <div class="map-container">
+    <div class="map-bar">
+      <span>Site locations</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm btn-route" data-action="plan-route">Plan route</button>
+        <button class="btn-sm" data-action="print-jobs">Print job sheet</button>
+      </div>
+    </div>
+    <div id="faultMap"></div>
+  </div>
   <div id="content"></div>
 </div>
 
@@ -683,8 +734,9 @@ function render() {
 
       // Site name + fault count badge
       html += '<div class="fault-top">';
+      var age = faultAge(first[3]);
       html += '<div><div class="fault-site">' + esc(siteName) + '</div>';
-      html += '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + esc(area) + ' &middot; ' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + '</div></div>';
+      html += '<div style="font-size:12px;color:var(--text-light);margin-top:2px">' + esc(area) + ' &middot; ' + faults.length + ' fault' + (faults.length !== 1 ? 's' : '') + (age.text ? '<span class="fault-age ' + age.cls + '">' + age.text + '</span>' : '') + '</div></div>';
       if (allCompleted) html += '<span class="status-pill completed">completed</span>';
       else if (anyEscalated) html += '<span class="status-pill escalated">escalated</span>';
       else if (anyInProgress) html += '<span class="status-pill in_progress">in progress</span>';
@@ -773,10 +825,31 @@ function render() {
   }
 
   container.innerHTML = html;
+
+  // Update map
+  currentSiteGroups = siteGroups;
+  currentSiteOrder = siteOrder;
+  updateMap(siteGroups, siteOrder);
+
+  // Update print meta
+  var aF = document.getElementById('areaFilter').value || 'All areas';
+  document.getElementById('printMeta').textContent = aF + ' | ' + (activeCat || 'All categories') + ' | Printed ' + new Date().toLocaleDateString('en-GB');
 }
 
 // Event delegation — all clicks and changes handled here, no inline handlers
 document.addEventListener('click', function(e) {
+  // Route planner
+  if (e.target.closest('[data-action="plan-route"]')) {
+    planRoute(currentSiteGroups, currentSiteOrder);
+    return;
+  }
+
+  // Print job sheet
+  if (e.target.closest('[data-action="print-jobs"]')) {
+    window.print();
+    return;
+  }
+
   // Category filter button
   const catBtn = e.target.closest('.cat-btn');
   if (catBtn) {
@@ -931,6 +1004,71 @@ function exportCSV() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// Fault age helper
+function faultAge(dateStr) {
+  if (!dateStr) return {text: '', cls: ''};
+  var parts = dateStr.split('/');
+  if (parts.length < 3) return {text: '', cls: ''};
+  var d = new Date(parts[2].split(' ')[0], parseInt(parts[1])-1, parseInt(parts[0]));
+  var now = new Date();
+  var days = Math.floor((now - d) / 86400000);
+  if (days < 0) return {text: '', cls: ''};
+  if (days < 7) return {text: days + 'd ago', cls: 'age-recent'};
+  if (days < 30) return {text: Math.floor(days/7) + 'w ago', cls: 'age-weeks'};
+  if (days < 365) return {text: Math.floor(days/30) + 'mo ago', cls: 'age-months'};
+  return {text: Math.floor(days/365) + 'y ago', cls: 'age-months'};
+}
+
+// Map
+var faultMap = L.map('faultMap').setView([54.97, -1.61], 10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap',
+  maxZoom: 18
+}).addTo(faultMap);
+var mapMarkers = L.layerGroup().addTo(faultMap);
+
+function updateMap(siteGroups, siteOrder) {
+  mapMarkers.clearLayers();
+  var bounds = [];
+  for (var i = 0; i < siteOrder.length; i++) {
+    var faults = siteGroups[siteOrder[i]];
+    var first = faults[0];
+    var lat = parseFloat(first[10]), lon = parseFloat(first[11]);
+    if (!lat || !lon) continue;
+    var colour = CAT_COLOURS[first[5]] || '#6B7280';
+    var marker = L.circleMarker([lat, lon], {
+      radius: 8, fillColor: colour, color: '#fff',
+      weight: 2, opacity: 1, fillOpacity: 0.85
+    });
+    marker.bindPopup('<b>' + esc(first[1]) + '</b><br>' + esc(first[5]) + '<br>' + faults.length + ' fault(s)<br><a href="https://www.google.com/maps/dir/?api=1&destination='+lat+','+lon+'" target="_blank">Navigate</a>');
+    marker.addTo(mapMarkers);
+    bounds.push([lat, lon]);
+  }
+  if (bounds.length > 0) faultMap.fitBounds(bounds, {padding: [30, 30]});
+}
+
+// Route planner
+function planRoute(siteGroups, siteOrder) {
+  var waypoints = [];
+  for (var i = 0; i < siteOrder.length; i++) {
+    var faults = siteGroups[siteOrder[i]];
+    var first = faults[0];
+    var lat = parseFloat(first[10]), lon = parseFloat(first[11]);
+    var o = getOutcome(first[2], first[0]);
+    if (!lat || !lon || o.status === 'completed') continue;
+    waypoints.push(lat + ',' + lon);
+    if (waypoints.length >= 10) break;
+  }
+  if (waypoints.length === 0) { alert('No pending sites with coordinates to route to.'); return; }
+  var dest = waypoints.pop();
+  var url = 'https://www.google.com/maps/dir/?api=1&destination=' + dest;
+  if (waypoints.length > 0) url += '&waypoints=' + waypoints.join('|');
+  window.open(url, '_blank');
+}
+
+var currentSiteGroups = {};
+var currentSiteOrder = [];
 
 // Init
 loadLocalState();
