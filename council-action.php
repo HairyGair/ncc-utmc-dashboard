@@ -188,13 +188,39 @@
 
   .empty { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 15px; }
   
+  /* Category filter buttons */
+  .cat-filters {
+    padding: 14px 24px; background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .cat-btn {
+    padding: 6px 14px; border: 2px solid var(--border); border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    background: var(--white); color: var(--text-mid);
+    font-family: inherit; transition: all 0.15s; white-space: nowrap;
+  }
+  .cat-btn:hover { border-color: var(--ncc-blue); color: var(--ncc-blue); }
+  .cat-btn.active { background: var(--ncc-blue); color: white; border-color: var(--ncc-blue); }
+  .cat-btn .cat-btn-count {
+    display: inline-block; background: rgba(0,0,0,0.1); border-radius: 10px;
+    padding: 1px 7px; font-size: 11px; margin-left: 4px;
+  }
+  .cat-btn.active .cat-btn-count { background: rgba(255,255,255,0.25); }
+
+  /* Flat fault list (no category sections) */
+  .fault-list {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
   @media (max-width: 768px) {
     .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .controls { flex-direction: column; }
+    .cat-filters { padding: 10px 16px; }
     .fault-footer { flex-direction: column; align-items: stretch; }
     .fault-footer select, .btn-sm { width: 100%; text-align: center; }
-    .cat-progress { display: none; }
-    .cat-progress-text { display: none; }
   }
 </style>
 </head>
@@ -233,6 +259,8 @@
   <input type="text" id="searchInput" placeholder="Search by site, fault ID, or description...">
   <div class="stats" id="statsBar"></div>
 </div>
+
+<div class="cat-filters" id="catFilters"></div>
 
 <div class="container">
   <div class="stats-row" id="statsRow"></div>
@@ -532,67 +560,61 @@ function cleanForTech(info, closeComments) {
   return text;
 }
 
+let activeCat = ''; // empty = show all
+
 function render() {
   const areaFilter = document.getElementById('areaFilter').value;
   const statusFilter = document.getElementById('statusFilter').value;
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
-  
-  // Filter faults
-  const filtered = FAULTS.filter(f => {
+
+  // Filter faults (area + status + search, before category filter)
+  const preFiltered = FAULTS.filter(f => {
     if (areaFilter && f[2] !== areaFilter) return false;
     const o = getOutcome(f[2], f[0]);
     if (statusFilter && o.status !== statusFilter) return false;
     if (search) {
-      const hay = (f[0] + ' ' + f[1] + ' ' + f[6] + ' ' + f[7]).toLowerCase();
+      const hay = (f[0] + ' ' + f[1] + ' ' + f[6] + ' ' + f[7] + ' ' + f[8]).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
   });
-  
-  // Group by category
-  const groups = {};
-  for (const cat of CATEGORIES) groups[cat] = [];
-  for (const f of filtered) {
-    const cat = f[5];
-    if (groups[cat]) groups[cat].push(f);
-    else groups[cat] = [f];
+
+  // Count per category (for button badges) — before category filter
+  const catCounts = {};
+  for (const cat of CATEGORIES) catCounts[cat] = 0;
+  for (const f of preFiltered) catCounts[f[5]] = (catCounts[f[5]] || 0) + 1;
+
+  // Build category filter buttons
+  let btnHtml = '<button class="cat-btn' + (!activeCat ? ' active' : '') + '" data-cat="">All<span class="cat-btn-count">' + preFiltered.length + '</span></button>';
+  for (const cat of CATEGORIES) {
+    if (catCounts[cat] === 0) continue;
+    const colour = CAT_COLOURS[cat] || '#6B7280';
+    btnHtml += '<button class="cat-btn' + (activeCat === cat ? ' active' : '') + '" data-cat="' + esc(cat) + '" style="' + (activeCat === cat ? 'background:'+colour+';border-color:'+colour+';color:white' : '') + '">' + esc(cat) + '<span class="cat-btn-count">' + catCounts[cat] + '</span></button>';
   }
-  
+  document.getElementById('catFilters').innerHTML = btnHtml;
+
+  // Apply category filter
+  const filtered = activeCat ? preFiltered.filter(f => f[5] === activeCat) : preFiltered;
+
   // Stats
   const total = filtered.length;
   const pending = filtered.filter(f => getOutcome(f[2], f[0]).status === 'pending').length;
   const inProgress = filtered.filter(f => getOutcome(f[2], f[0]).status === 'in_progress').length;
   const completed = filtered.filter(f => getOutcome(f[2], f[0]).status === 'completed').length;
-  const escalated = filtered.filter(f => getOutcome(f[2], f[0]).status === 'escalated').length;
 
   document.getElementById('statsRow').innerHTML =
-    '<div class="stat-card stat-total"><div class="stat-number">' + total + '</div><div class="stat-label">Total faults</div></div>' +
+    '<div class="stat-card stat-total"><div class="stat-number">' + total + '</div><div class="stat-label">Showing</div></div>' +
     '<div class="stat-card stat-pending"><div class="stat-number">' + pending + '</div><div class="stat-label">Pending</div></div>' +
     '<div class="stat-card stat-progress"><div class="stat-number">' + inProgress + '</div><div class="stat-label">In progress</div></div>' +
     '<div class="stat-card stat-completed"><div class="stat-number">' + completed + '</div><div class="stat-label">Completed</div></div>';
-  
-  // Render
+
+  // Render flat list
   const container = document.getElementById('content');
   let html = '';
-  
-  for (const cat of CATEGORIES) {
-    const items = groups[cat];
-    if (!items || items.length === 0) continue;
-    
-    const colour = CAT_COLOURS[cat] || '#6B7280';
-    const catCompleted = items.filter(f => getOutcome(f[2], f[0]).status === 'completed').length;
-    const catPct = items.length > 0 ? Math.round((catCompleted / items.length) * 100) : 0;
-    html += '<div class="cat-section" id="cat-' + cat.replace(/[^a-zA-Z]/g, '') + '">';
-    html += '<div class="cat-header" data-toggle="cat">';
-    html += '<span class="cat-badge" style="background:' + colour + '">' + items.length + '</span>';
-    html += '<span class="cat-name">' + esc(cat) + '</span>';
-    html += '<div class="cat-progress"><div class="cat-progress-bar" style="width:' + catPct + '%"></div></div>';
-    html += '<span class="cat-progress-text">' + catPct + '%</span>';
-    html += '<span class="cat-toggle">&#9660;</span>';
-    html += '</div>';
-    html += '<div class="cat-body">';
-    
-    for (const f of items) {
+
+  if (filtered.length > 0) {
+    html += '<div class="fault-list">';
+    for (const f of filtered) {
       const o = getOutcome(f[2], f[0]);
       const statusClass = o.status !== 'pending' ? ' status-' + o.status : '';
       const fid = f[0];
@@ -652,23 +674,23 @@ function render() {
       
       html += '</div>';
     }
-    
-    html += '</div></div>';
+    html += '</div>';
   }
-  
+
   if (total === 0) {
     html = '<div class="empty">No faults match your filters.</div>';
   }
-  
+
   container.innerHTML = html;
 }
 
 // Event delegation — all clicks and changes handled here, no inline handlers
 document.addEventListener('click', function(e) {
-  // Category section toggle
-  const catHeader = e.target.closest('[data-toggle="cat"]');
-  if (catHeader) {
-    catHeader.parentElement.classList.toggle('collapsed');
+  // Category filter button
+  const catBtn = e.target.closest('.cat-btn');
+  if (catBtn) {
+    activeCat = catBtn.dataset.cat || '';
+    render();
     return;
   }
 
