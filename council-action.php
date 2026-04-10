@@ -133,8 +133,13 @@
   .status-pill.escalated { background: #FECACA; color: #991B1B; }
 
   .fault-summary {
-    font-size: 15px; color: var(--text-mid); line-height: 1.5;
-    margin-bottom: 10px;
+    font-size: 14px; color: var(--text-mid); line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .fault-codes {
+    font-size: 12px; color: var(--ncc-blue); background: #F0F1F5;
+    padding: 5px 10px; border-radius: 4px; display: inline-block;
+    margin-bottom: 10px; font-weight: 500;
   }
 
   .fault-notes-display {
@@ -595,13 +600,22 @@ function render() {
       
       html += '<div class="fault-card' + statusClass + '" data-uid="' + uid + '">';
 
-      // Clean card: site name + status. That's it.
+      // Site name + status
       html += '<div class="fault-top">';
       html += '<div class="fault-site">' + esc(f[1]) + '</div>';
       html += '<span class="status-pill ' + o.status + '">' + o.status.replace('_', ' ') + '</span>';
       html += '</div>';
 
-      // Notes (full, prominent — only if set)
+      // Additional info — what needs doing
+      if (f[6]) html += '<div class="fault-summary">' + esc(f[6]) + '</div>';
+
+      // Fault codes and description
+      var codeStr = '';
+      if (f[8] && f[8] !== '-' && f[8] !== 'None') codeStr += f[8];
+      if (f[9] && f[9] !== 'See comments' && f[9] !== 'None') codeStr += (codeStr ? ' — ' : '') + f[9];
+      if (codeStr) html += '<div class="fault-codes">' + esc(codeStr) + '</div>';
+
+      // User notes (full, prominent — only if set)
       if (o.notes) {
         html += '<div class="fault-notes-display"><strong>Your notes</strong>' + esc(o.notes) + '</div>';
       }
