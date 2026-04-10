@@ -8,89 +8,121 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Council Action">
 <title>UTMC Council Action Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #1B2A4A;
-    --navy-dark: #111E35;
-    --accent: #2E7DCC;
-    --accent-light: #E8F2FB;
-    --bg: #F0F2F5;
+    --ncc-blue: #444970;
+    --ncc-teal: #56F0D1;
+    --ncc-grey: #ECEAEA;
+    --navy: #444970;
+    --navy-dark: #333860;
+    --accent: #444970;
+    --accent-light: #ECEAEA;
+    --bg: #F4F5F7;
     --white: #FFFFFF;
-    --border: #DDE1E9;
+    --border: #E2E4EA;
     --text: #1A1A2E;
     --text-mid: #4A5568;
     --text-light: #718096;
-    --green: #1A7F4B;
-    --green-bg: #EAF7F0;
-    --red: #B91C1C;
+    --green: #059669;
+    --green-bg: #ECFDF5;
+    --red: #DC2626;
     --red-bg: #FEF2F2;
-    --amber: #92400E;
+    --amber: #D97706;
     --amber-bg: #FFFBEB;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  body { font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-weight: 400; }
   
   .topbar {
-    background: var(--navy); color: white; padding: 14px 20px;
+    background: linear-gradient(135deg, var(--ncc-blue) 0%, #333860 100%);
+    color: white; padding: 16px 24px;
     display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(68,73,112,0.3);
   }
-  .topbar h1 { font-size: 18px; font-weight: 600; }
-  .topbar .subtitle { font-size: 12px; opacity: 0.7; }
-  .topbar a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; }
+  .topbar h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar .subtitle { font-size: 12px; opacity: 0.6; font-weight: 300; margin-top: 2px; }
+  .topbar a { color: var(--ncc-teal); text-decoration: none; font-size: 13px; font-weight: 500; }
   .topbar a:hover { color: white; }
   
   .controls {
     background: var(--white); border-bottom: 1px solid var(--border);
-    padding: 12px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-    position: sticky; top: 52px; z-index: 99;
+    padding: 14px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    position: sticky; top: 58px; z-index: 99;
   }
   .controls select, .controls input {
-    padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
-    font-size: 14px; background: var(--white);
+    padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; background: var(--white); font-family: inherit;
+    transition: border-color 0.2s;
   }
+  .controls select:focus, .controls input:focus { border-color: var(--ncc-blue); outline: none; box-shadow: 0 0 0 3px rgba(68,73,112,0.1); }
   .controls select { min-width: 180px; }
   .controls input { flex: 1; min-width: 200px; }
-  .stats { font-size: 13px; color: var(--text-mid); margin-left: auto; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  /* Stats dashboard */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--white); border-radius: 10px; padding: 18px 20px;
+    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stat-card .stat-number { font-size: 28px; font-weight: 700; color: var(--ncc-blue); line-height: 1; }
+  .stat-card .stat-label { font-size: 12px; color: var(--text-light); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card.stat-pending .stat-number { color: #6B7280; }
+  .stat-card.stat-progress .stat-number { color: var(--amber); }
+  .stat-card.stat-completed .stat-number { color: var(--green); }
+  .stat-card.stat-total .stat-number { color: var(--ncc-blue); }
   
-  .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
-  
-  .cat-section { margin-bottom: 20px; }
+  .cat-section { margin-bottom: 16px; }
   .cat-header {
-    display: flex; align-items: center; gap: 10px; padding: 12px 16px;
-    background: var(--white); border-radius: 8px 8px 0 0; border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+    background: var(--white); border-radius: 10px 10px 0 0; border: 1px solid var(--border);
     cursor: pointer; user-select: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: background 0.15s;
   }
   .cat-header:hover { background: #f8f9fb; }
   .cat-badge {
-    display: inline-block; padding: 3px 10px; border-radius: 4px;
-    color: white; font-size: 11px; font-weight: 600; min-width: 24px; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    color: white; font-size: 13px; font-weight: 700;
   }
-  .cat-name { font-weight: 600; font-size: 15px; }
-  .cat-count { font-size: 13px; color: var(--text-light); }
-  .cat-toggle { margin-left: auto; font-size: 18px; color: var(--text-light); transition: transform 0.2s; }
+  .cat-name { font-weight: 600; font-size: 15px; flex: 1; }
+  .cat-progress {
+    width: 80px; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden;
+  }
+  .cat-progress-bar { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.3s; }
+  .cat-progress-text { font-size: 11px; color: var(--text-light); width: 36px; text-align: right; }
+  .cat-toggle { font-size: 18px; color: var(--text-light); transition: transform 0.2s; margin-left: 4px; }
   .cat-section.collapsed .cat-toggle { transform: rotate(-90deg); }
   .cat-section.collapsed .cat-body { display: none; }
-  
+
   .cat-body {
     border: 1px solid var(--border); border-top: none;
-    border-radius: 0 0 8px 8px; overflow: hidden;
+    border-radius: 0 0 10px 10px; overflow: hidden;
   }
   
   .fault-card {
-    padding: 16px 20px; border-bottom: 1px solid #eef0f4;
-    background: var(--white);
+    padding: 18px 20px; border-bottom: 1px solid #eef0f4;
+    background: var(--white); transition: background 0.15s;
   }
   .fault-card:last-child { border-bottom: none; }
-  .fault-card.status-completed { background: var(--green-bg); }
-  .fault-card.status-in_progress { background: var(--amber-bg); }
-  .fault-card.status-escalated { background: var(--red-bg); }
+  .fault-card:hover { background: #FAFBFD; }
+  .fault-card.status-completed { background: var(--green-bg); border-left: 4px solid var(--green); }
+  .fault-card.status-in_progress { background: var(--amber-bg); border-left: 4px solid var(--amber); }
+  .fault-card.status-escalated { background: var(--red-bg); border-left: 4px solid var(--red); }
 
   .fault-top {
     display: flex; align-items: flex-start; justify-content: space-between;
     gap: 12px; margin-bottom: 8px;
   }
-  .fault-site { font-weight: 700; font-size: 16px; color: var(--text); }
+  .fault-site { font-weight: 600; font-size: 16px; color: var(--text); letter-spacing: -0.2px; }
   .status-pill {
     display: inline-block; padding: 4px 12px; border-radius: 12px;
     font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
@@ -152,10 +184,12 @@
   .empty { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 15px; }
   
   @media (max-width: 768px) {
-    .fault-card { grid-template-columns: 1fr; }
-    .fault-actions { flex-direction: row; min-width: unset; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .controls { flex-direction: column; }
-    .stats { margin-left: 0; }
+    .fault-footer { flex-direction: column; align-items: stretch; }
+    .fault-footer select, .btn-sm { width: 100%; text-align: center; }
+    .cat-progress { display: none; }
+    .cat-progress-text { display: none; }
   }
 </style>
 </head>
@@ -195,7 +229,10 @@
   <div class="stats" id="statsBar"></div>
 </div>
 
-<div class="container" id="content"></div>
+<div class="container">
+  <div class="stats-row" id="statsRow"></div>
+  <div id="content"></div>
+</div>
 
 <script>
 const API_URL = 'api/index.php?page=council_action';
@@ -521,8 +558,13 @@ function render() {
   const pending = filtered.filter(f => getOutcome(f[2], f[0]).status === 'pending').length;
   const inProgress = filtered.filter(f => getOutcome(f[2], f[0]).status === 'in_progress').length;
   const completed = filtered.filter(f => getOutcome(f[2], f[0]).status === 'completed').length;
-  document.getElementById('statsBar').textContent = 
-    total + ' faults | ' + pending + ' pending | ' + inProgress + ' in progress | ' + completed + ' completed';
+  const escalated = filtered.filter(f => getOutcome(f[2], f[0]).status === 'escalated').length;
+
+  document.getElementById('statsRow').innerHTML =
+    '<div class="stat-card stat-total"><div class="stat-number">' + total + '</div><div class="stat-label">Total faults</div></div>' +
+    '<div class="stat-card stat-pending"><div class="stat-number">' + pending + '</div><div class="stat-label">Pending</div></div>' +
+    '<div class="stat-card stat-progress"><div class="stat-number">' + inProgress + '</div><div class="stat-label">In progress</div></div>' +
+    '<div class="stat-card stat-completed"><div class="stat-number">' + completed + '</div><div class="stat-label">Completed</div></div>';
   
   // Render
   const container = document.getElementById('content');
@@ -533,10 +575,14 @@ function render() {
     if (!items || items.length === 0) continue;
     
     const colour = CAT_COLOURS[cat] || '#6B7280';
+    const catCompleted = items.filter(f => getOutcome(f[2], f[0]).status === 'completed').length;
+    const catPct = items.length > 0 ? Math.round((catCompleted / items.length) * 100) : 0;
     html += '<div class="cat-section" id="cat-' + cat.replace(/[^a-zA-Z]/g, '') + '">';
     html += '<div class="cat-header" data-toggle="cat">';
     html += '<span class="cat-badge" style="background:' + colour + '">' + items.length + '</span>';
     html += '<span class="cat-name">' + esc(cat) + '</span>';
+    html += '<div class="cat-progress"><div class="cat-progress-bar" style="width:' + catPct + '%"></div></div>';
+    html += '<span class="cat-progress-text">' + catPct + '%</span>';
     html += '<span class="cat-toggle">&#9660;</span>';
     html += '</div>';
     html += '<div class="cat-body">';
